@@ -26,7 +26,7 @@
         
         .container {
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
             text-align: center;
         }
         
@@ -63,29 +63,45 @@
             object-fit: cover;
         }
         
-        .emotion-display {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
-            border-radius: 15px;
+        .emotions-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
             margin: 20px 0;
+        }
+        
+        .emotion-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 15px;
+            min-width: 150px;
             border: 1px solid #333;
+            flex: 1;
+        }
+        
+        .face-label {
+            font-size: 14px;
+            color: #4cc9f0;
+            margin-bottom: 5px;
+            font-weight: bold;
         }
         
         .emotion-label {
-            font-size: 14px;
+            font-size: 12px;
             color: #888;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
         
         .emotion-text {
-            font-size: 32px;
+            font-size: 24px;
             font-weight: bold;
-            min-height: 40px;
+            min-height: 36px;
             color: #4cc9f0;
         }
         
         .confidence {
-            font-size: 14px;
+            font-size: 12px;
             color: #888;
             margin-top: 5px;
         }
@@ -200,8 +216,13 @@
                 height: 300px;
             }
             
+            .emotion-box {
+                min-width: 120px;
+                padding: 10px;
+            }
+            
             .emotion-text {
-                font-size: 24px;
+                font-size: 20px;
             }
             
             button {
@@ -218,12 +239,16 @@
         .hidden {
             display: none !important;
         }
+        
+        .emoji {
+            font-size: 28px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🎭 Face Emotion Detector</h1>
-        <p class="subtitle">Real-time facial expression analysis</p>
+        <p class="subtitle">Real-time facial expression analysis for multiple faces</p>
         
         <div class="video-container">
             <video id="video" autoplay playsinline></video>
@@ -234,12 +259,10 @@
             </div>
         </div>
         
-        <div class="status" id="status"></div>
+        <div class="status" id="status">Ready to start detection</div>
         
-        <div class="emotion-display">
-            <div class="emotion-label">CURRENT EMOTION</div>
-            <div class="emotion-text" id="emotion">--</div>
-            <div class="confidence" id="confidence">Click Start to begin</div>
+        <div class="emotions-container" id="emotionsContainer">
+            <!-- Dynamic emotion boxes will be inserted here -->
         </div>
         
         <div class="controls">
@@ -251,13 +274,14 @@
             <h3>How to Use:</h3>
             <ul>
                 <li>Allow camera access when prompted</li>
-                <li>Ensure good lighting on your face</li>
+                <li>Ensure good lighting on faces</li>
+                <li>Can detect up to 4 faces simultaneously</li>
                 <li>Try these expressions:</li>
                 <li>😊 Smile for HAPPY</li>
-                <li>😮 Open mouth for SURPRISED</li>
+                <li>😮 Open mouth wide for SURPRISED</li>
                 <li>😔 Frown for SAD</li>
-                <li>😠 Squint for ANGRY</li>
-                <li>😴 Close eyes for SLEEPY</li>
+                <li>😠 Furrow brows for ANGRY</li>
+                <li>😐 Neutral expression</li>
             </ul>
         </div>
     </div>
@@ -267,19 +291,33 @@
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const emotionElement = document.getElementById('emotion');
-        const confidenceElement = document.getElementById('confidence');
         const statusElement = document.getElementById('status');
         const statusText = document.getElementById('statusText');
         const loadingElement = document.getElementById('loading');
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
+        const emotionsContainer = document.getElementById('emotionsContainer');
         
         // State variables
         let faceMesh = null;
         let cameraRunning = false;
-        let emotionHistory = [];
         let isModelLoaded = false;
+        let lastDetectionTime = 0;
+        const DETECTION_INTERVAL = 100; // ms
+        
+        // Emotion emoji mapping
+        const EMOTION_EMOJIS = {
+            'HAPPY': '😊',
+            'SAD': '😔',
+            'ANGRY': '😠',
+            'SURPRISED': '😮',
+            'FEAR': '😨',
+            'DISGUST': '🤢',
+            'NEUTRAL': '😐',
+            'CONFUSED': '🤔',
+            'SLEEPY': '😴',
+            'UNKNOWN': '🤷'
+        };
         
         // Initialize when page loads
         window.addEventListener('DOMContentLoaded', () => {
@@ -355,7 +393,7 @@
                 });
                 
                 faceMesh.setOptions({
-                    maxNumFaces: 1,
+                    maxNumFaces: 4, // CHANGED: Now supports up to 4 faces
                     refineLandmarks: true,
                     minDetectionConfidence: 0.5,
                     minTrackingConfidence: 0.5,
@@ -369,12 +407,15 @@
                 startBtn.disabled = false;
                 startBtn.textContent = '🎥 Start Camera';
                 statusText.textContent = '✅ AI Model Loaded!';
-                statusElement.textContent = 'Ready to detect emotions';
+                statusElement.textContent = 'Ready to detect emotions from multiple faces';
                 
                 // Hide loading after a delay
                 setTimeout(() => {
                     loadingElement.classList.add('hidden');
                 }, 1000);
+                
+                // Create initial emotion boxes
+                updateEmotionBoxes(0);
                 
             } catch (error) {
                 showError(error.message);
@@ -383,6 +424,16 @@
         
         function onResults(results) {
             if (!cameraRunning) return;
+            
+            const currentTime = Date.now();
+            if (currentTime - lastDetectionTime < DETECTION_INTERVAL) {
+                // Skip frame to maintain performance
+                requestAnimationFrame(() => {
+                    faceMesh.send({ image: video });
+                });
+                return;
+            }
+            lastDetectionTime = currentTime;
             
             // Set canvas dimensions
             canvas.width = video.videoWidth || 640;
@@ -398,67 +449,70 @@
             ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
             ctx.restore();
             
-            // Check for face
+            // Check for faces
             if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) {
-                emotionElement.textContent = 'No face detected';
-                confidenceElement.textContent = 'Make sure your face is visible';
-                statusElement.textContent = 'Looking for face...';
+                statusElement.textContent = 'No faces detected - make sure faces are visible';
+                updateEmotionBoxes(0);
                 return;
             }
             
-            const landmarks = results.multiFaceLandmarks[0];
+            const faces = results.multiFaceLandmarks;
+            const faceDetections = [];
             
-            // Get key points
-            const leftEye = [landmarks[33], landmarks[160], landmarks[158], landmarks[133]];
-            const rightEye = [landmarks[362], landmarks[385], landmarks[387], landmarks[263]];
-            const mouth = [landmarks[13], landmarks[14], landmarks[61], landmarks[291]];
-            
-            // Calculate metrics
-            const eyeOpenness = (getDistance(leftEye[0], leftEye[1]) + getDistance(rightEye[0], rightEye[1])) / 2;
-            const mouthOpenness = getDistance(mouth[0], mouth[1]);
-            const mouthWidth = getDistance(mouth[2], mouth[3]);
-            
-            // Detect emotion
-            let emotion = 'Neutral 😐';
-            let confidence = 70;
-            
-            if (mouthOpenness > 0.08 && mouthWidth > 0.15) {
-                emotion = 'Happy 😊';
-                confidence = Math.min(95, 70 + (mouthOpenness * 200));
-            } else if (mouthOpenness > 0.1) {
-                emotion = 'Surprised 😮';
-                confidence = Math.min(95, 70 + (mouthOpenness * 150));
-            } else if (eyeOpenness < 0.02) {
-                emotion = 'Sleepy 😴';
-                confidence = Math.min(95, 70 + ((0.02 - eyeOpenness) * 1000));
-            } else if (mouthOpenness < 0.02 && mouthWidth < 0.1) {
-                emotion = 'Sad 😔';
-                confidence = 75;
-            } else if (eyeOpenness < 0.015 && mouthWidth < 0.08) {
-                emotion = 'Angry 😠';
-                confidence = 75;
-            }
-            
-            // Update display
-            emotionElement.textContent = emotion;
-            confidenceElement.textContent = `Confidence: ${confidence}%`;
-            statusElement.textContent = 'Detecting emotions...';
-            
-            // Draw landmarks
             ctx.save();
             ctx.translate(canvas.width, 0);
             ctx.scale(-1, 1);
             
-            // Simple face points drawing
-            ctx.fillStyle = '#4cc9f0';
-            [33, 133, 362, 263, 13, 14, 61, 291].forEach(index => {
-                const point = landmarks[index];
-                ctx.beginPath();
-                ctx.arc(point.x * canvas.width, point.y * canvas.height, 3, 0, 2 * Math.PI);
-                ctx.fill();
-            });
+            // Process each face
+            for (let i = 0; i < faces.length; i++) {
+                const landmarks = faces[i];
+                
+                // Get key facial points with improved indices
+                const leftEye = [landmarks[33], landmarks[7], landmarks[163], landmarks[144]];
+                const rightEye = [landmarks[362], landmarks[381], landmarks[380], landmarks[374]];
+                const mouth = [landmarks[13], landmarks[14], landmarks[78], landmarks[308]];
+                const leftEyebrow = [landmarks[70], landmarks[46]];
+                const rightEyebrow = [landmarks[300], landmarks[276]];
+                const nose = landmarks[1];
+                const jaw = landmarks[152];
+                
+                // Calculate improved metrics
+                const leftEyeAspect = calculateEyeAspectRatio(leftEye);
+                const rightEyeAspect = calculateEyeAspectRatio(rightEye);
+                const eyeOpenness = (leftEyeAspect + rightEyeAspect) / 2;
+                
+                const mouthOpenness = calculateMouthOpenness(
+                    landmarks[13], landmarks[14], landmarks[78], landmarks[308]
+                );
+                
+                const mouthWidth = getDistance(landmarks[78], landmarks[308]);
+                const eyebrowTilt = calculateEyebrowTilt(leftEyebrow, rightEyebrow, nose);
+                
+                // Detect emotion with improved algorithm
+                const { emotion, confidence } = detectEmotion(
+                    eyeOpenness,
+                    mouthOpenness,
+                    mouthWidth,
+                    eyebrowTilt,
+                    landmarks
+                );
+                
+                faceDetections.push({
+                    index: i,
+                    emotion: emotion,
+                    confidence: confidence,
+                    landmarks: landmarks
+                });
+                
+                // Draw face boundary and label
+                drawFaceInfo(ctx, landmarks, i, emotion, confidence);
+            }
             
             ctx.restore();
+            
+            // Update UI with all face emotions
+            updateEmotionBoxes(faceDetections.length, faceDetections);
+            statusElement.textContent = `Detecting ${faceDetections.length} face${faceDetections.length !== 1 ? 's' : ''}`;
             
             // Continue processing
             if (cameraRunning) {
@@ -468,10 +522,175 @@
             }
         }
         
+        function calculateEyeAspectRatio(eyePoints) {
+            // Vertical distances
+            const vertical1 = getDistance(eyePoints[1], eyePoints[5]);
+            const vertical2 = getDistance(eyePoints[2], eyePoints[4]);
+            
+            // Horizontal distance
+            const horizontal = getDistance(eyePoints[0], eyePoints[3]);
+            
+            // Eye aspect ratio
+            return (vertical1 + vertical2) / (2.0 * horizontal);
+        }
+        
+        function calculateMouthOpenness(top, bottom, left, right) {
+            const vertical = getDistance(top, bottom);
+            const horizontal = getDistance(left, right);
+            return vertical / horizontal;
+        }
+        
+        function calculateEyebrowTilt(leftEyebrow, rightEyebrow, nose) {
+            const leftDist = getDistance(leftEyebrow[0], nose);
+            const rightDist = getDistance(rightEyebrow[0], nose);
+            return (rightDist - leftDist) / (leftDist + rightDist);
+        }
+        
+        function detectEmotion(eyeOpenness, mouthOpenness, mouthWidth, eyebrowTilt, landmarks) {
+            // Improved emotion detection logic
+            let emotion = 'NEUTRAL';
+            let confidence = 50;
+            
+            // Check for happiness (smile)
+            if (mouthOpenness > 0.15 && mouthWidth > 0.12 && eyebrowTilt > -0.1) {
+                emotion = 'HAPPY';
+                confidence = Math.min(95, 60 + (mouthOpenness * 200));
+            }
+            // Check for surprise (wide eyes and mouth)
+            else if (eyeOpenness > 0.35 && mouthOpenness > 0.25) {
+                emotion = 'SURPRISED';
+                confidence = Math.min(95, 65 + ((eyeOpenness + mouthOpenness) * 150));
+            }
+            // Check for sadness (drooping features)
+            else if (mouthOpenness < 0.08 && mouthWidth > 0.1 && eyebrowTilt > 0.15) {
+                emotion = 'SAD';
+                confidence = Math.min(90, 60 + Math.abs(eyebrowTilt) * 100);
+            }
+            // Check for anger (furrowed brows, tight mouth)
+            else if (eyeOpenness < 0.2 && mouthOpenness < 0.06 && eyebrowTilt < -0.1) {
+                emotion = 'ANGRY';
+                confidence = Math.min(90, 65 + Math.abs(eyebrowTilt) * 120);
+            }
+            // Check for fear (wide eyes, tight mouth)
+            else if (eyeOpenness > 0.35 && mouthOpenness < 0.06) {
+                emotion = 'FEAR';
+                confidence = Math.min(85, 60 + (eyeOpenness * 150));
+            }
+            // Check for disgust (nose wrinkle, mouth asymmetry)
+            else if (mouthOpenness > 0.1 && mouthOpenness < 0.15 && Math.abs(eyebrowTilt) > 0.2) {
+                emotion = 'DISGUST';
+                confidence = 70;
+            }
+            // Check for sleepy (eyes closed)
+            else if (eyeOpenness < 0.15) {
+                emotion = 'SLEEPY';
+                confidence = Math.min(95, 70 + ((0.15 - eyeOpenness) * 300));
+            }
+            // Check for confusion (asymmetric features)
+            else if (Math.abs(eyebrowTilt) > 0.25) {
+                emotion = 'CONFUSED';
+                confidence = Math.min(80, 60 + Math.abs(eyebrowTilt) * 80);
+            }
+            
+            // Normalize confidence
+            confidence = Math.round(Math.min(99, Math.max(20, confidence)));
+            
+            return { emotion, confidence };
+        }
+        
+        function drawFaceInfo(ctx, landmarks, faceIndex, emotion, confidence) {
+            // Calculate face bounding box
+            let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
+            
+            for (const point of landmarks) {
+                minX = Math.min(minX, point.x * canvas.width);
+                minY = Math.min(minY, point.y * canvas.height);
+                maxX = Math.max(maxX, point.x * canvas.width);
+                maxY = Math.max(maxY, point.y * canvas.height);
+            }
+            
+            const width = maxX - minX;
+            const height = maxY - minY;
+            
+            // Draw face bounding box
+            ctx.strokeStyle = faceIndex === 0 ? '#4cc9f0' : 
+                             faceIndex === 1 ? '#f04c4c' : 
+                             faceIndex === 2 ? '#4cf04c' : '#f0f04c';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(minX - 10, minY - 10, width + 20, height + 20);
+            
+            // Draw label background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(minX - 10, minY - 40, 150, 30);
+            
+            // Draw label text
+            ctx.fillStyle = 'white';
+            ctx.font = '14px Arial';
+            ctx.fillText(`Face ${faceIndex + 1}: ${emotion} ${EMOTION_EMOJIS[emotion]}`, minX - 5, minY - 20);
+            
+            // Draw confidence
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#888';
+            ctx.fillText(`${confidence}%`, minX - 5, minY - 5);
+            
+            // Draw key points
+            ctx.fillStyle = faceIndex === 0 ? '#4cc9f0' : 
+                           faceIndex === 1 ? '#f04c4c' : 
+                           faceIndex === 2 ? '#4cf04c' : '#f0f04c';
+            const keyPoints = [33, 133, 362, 263, 13, 14, 78, 308, 1, 152];
+            for (const index of keyPoints) {
+                const point = landmarks[index];
+                ctx.beginPath();
+                ctx.arc(point.x * canvas.width, point.y * canvas.height, 3, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+        }
+        
         function getDistance(p1, p2) {
             const dx = p2.x - p1.x;
             const dy = p2.y - p1.y;
             return Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        function updateEmotionBoxes(numFaces, faceDetections = []) {
+            emotionsContainer.innerHTML = '';
+            
+            if (numFaces === 0) {
+                const box = document.createElement('div');
+                box.className = 'emotion-box';
+                box.innerHTML = `
+                    <div class="face-label">No Faces</div>
+                    <div class="emotion-label">EMOTION</div>
+                    <div class="emotion-text">--</div>
+                    <div class="confidence">Waiting for faces...</div>
+                `;
+                emotionsContainer.appendChild(box);
+                return;
+            }
+            
+            for (let i = 0; i < numFaces; i++) {
+                const box = document.createElement('div');
+                box.className = 'emotion-box';
+                
+                let emotion = '--';
+                let confidence = '--';
+                let emoji = '';
+                
+                if (i < faceDetections.length) {
+                    const detection = faceDetections[i];
+                    emotion = detection.emotion;
+                    confidence = detection.confidence + '%';
+                    emoji = EMOTION_EMOJIS[emotion] || EMOTION_EMOJIS.UNKNOWN;
+                }
+                
+                box.innerHTML = `
+                    <div class="face-label">Face ${i + 1}</div>
+                    <div class="emotion-label">EMOTION</div>
+                    <div class="emotion-text">${emoji} ${emotion}</div>
+                    <div class="confidence">Confidence: ${confidence}</div>
+                `;
+                emotionsContainer.appendChild(box);
+            }
         }
         
         async function startCamera() {
@@ -500,7 +719,7 @@
                     // Update UI
                     startBtn.classList.add('hidden');
                     stopBtn.classList.remove('hidden');
-                    statusElement.textContent = 'Camera ready! Detecting...';
+                    statusElement.textContent = 'Camera ready! Detecting emotions...';
                     
                     // Start detection
                     faceMesh.send({ image: video });
@@ -519,10 +738,9 @@
                 }
                 
                 statusElement.textContent = `Error: ${errorMessage}`;
-                emotionElement.textContent = 'Camera Error';
-                confidenceElement.textContent = 'Please allow camera access';
                 startBtn.disabled = false;
                 startBtn.textContent = 'Try Again';
+                updateEmotionBoxes(0);
             }
         }
         
@@ -542,16 +760,16 @@
             startBtn.classList.remove('hidden');
             startBtn.disabled = false;
             stopBtn.classList.add('hidden');
-            emotionElement.textContent = '--';
-            confidenceElement.textContent = 'Camera stopped';
             statusElement.textContent = 'Ready to start';
+            updateEmotionBoxes(0);
         }
         
         // Handle page visibility
         document.addEventListener('visibilitychange', () => {
             if (document.hidden && cameraRunning) {
-                // Save state but don't stop camera
                 statusElement.textContent = 'Tab inactive - detection paused';
+            } else if (cameraRunning) {
+                statusElement.textContent = 'Resuming detection...';
             }
         });
     </script>
