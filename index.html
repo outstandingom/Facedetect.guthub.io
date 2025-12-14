@@ -7,9 +7,6 @@
 
   <!-- MediaPipe -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
-  
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
 
@@ -20,28 +17,44 @@
       background: #000;
       color: white;
       font-family: Arial;
+      overflow: hidden;
+    }
+    .container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     video, canvas {
       position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: auto;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
     }
     #info {
       position: fixed;
       bottom: 10px;
+      left: 0;
       width: 100%;
       background: rgba(0,0,0,0.6);
       padding: 10px;
+      z-index: 10;
+      text-align: center;
     }
   </style>
 </head>
 
 <body>
 
-<video id="video" autoplay playsinline></video>
-<canvas id="canvas"></canvas>
+<div class="container">
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
+</div>
 
 <div id="info">
   Emotion: <span id="emotion">Detecting...</span>
