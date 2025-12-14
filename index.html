@@ -1,78 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Live Face Emotion Detection</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
-
-  <style>
-    body {
-      margin: 0;
-      text-align: center;
-      background: #000;
-      color: white;
-      font-family: Arial;
-      overflow: hidden;
-    }
-    .container {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    video, canvas {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
-    #info {
-      position: fixed;
-      bottom: 10px;
-      left: 0;
-      width: 100%;
-      background: rgba(0,0,0,0.6);
-      padding: 10px;
-      z-index: 10;
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-    }
-    #landmarkInfo {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      background: rgba(0,0,0,0.6);
-      padding: 10px;
-      z-index: 10;
-      font-size: 12px;
-      text-align: left;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Face Emotion Detection</title>
+    
+    <!-- Load MediaPipe from official CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00dbde 0%, #fc00ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        video, canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 75%; /* 4:3 aspect ratio */
+            background: #000;
+        }
+        
+        .emotion-display {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .emotion-text {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #00dbde;
+        }
+        
+        .instructions ul {
+            list-style-position: inside;
+            text-align: left;
+        }
+        
+        .instructions li {
+            margin: 5px 0;
+            padding-left: 10px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        button {
+            background: linear-gradient(90deg, #00dbde 0%, #fc00ff 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 219, 222, 0.4);
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+        }
+        
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .emotion-text {
+                font-size: 1.5rem;
+            }
+            
+            button {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
 </head>
-
 <body>
-<div class="container">
-  <video id="video" autoplay playsinline></video>
-  <canvas id="canvas"></canvas>
-</div>
+    <div class="header">
+        <h1>🎭 Real-Time Emotion Detection</h1>
+        <p class="subtitle">Using AI-powered facial landmark analysis</p>
+    </div>
+    
+    <div class="container">
+        <div class="video-container">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas"></canvas>
+            <div class="loading" id="loading">
+                <p>Loading AI model...</p>
+                <div class="status" id="status">Initializing camera...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="emotion-display">
+        <h3>Detected Emotion:</h3>
+        <div class="emotion-text" id="emotion">Starting up...</div>
+        <div id="confidence"></div>
+    </div>
+    
+    <div class="instructions">
+        <h3>💡 How to Use:</h3>
+        <ul>
+            <li>Allow camera access when prompted</li>
+            <li>Make sure your face is well-lit and visible</li>
+            <li>Try different facial expressions:</li>
+            <li>😊 Smile for HAPPY</li>
+            <li>😮 Open mouth wide for SURPRISED</li>
+            <li>😔 Frown or look down for SAD</li>
+            <li>😠 Squint eyes for ANGRY</li>
+            <li>😴 Close eyes for SLEEPY</li>
+        </ul>
+    </div>
+    
+    <div class="controls">
+        <button onclick="startCamera()" id="startBtn">Start Camera</button>
+        <button onclick="stopCamera()" id="stopBtn" style="display:none;">Stop Camera</button>
+        <button onclick="toggleDebug()" id="debugBtn">Toggle Debug View</button>
+    </div>
 
-<div id="info">
-  Emotion: <span id="emotion">Starting...</span>
-</div>
-<div id="landmarkInfo">
-  Landmark Data: <span id="landmarkData">Waiting...</span>
-</div>
-
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
