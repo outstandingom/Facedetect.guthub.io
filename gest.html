@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Human Activity Detector</title>
+<title>Human Activity & Movement Detector</title>
 
 <style>
 body{
@@ -17,8 +17,8 @@ body{
     min-height:100vh;
 }
 .container{
+    max-width:760px;
     width:100%;
-    max-width:720px;
     padding:15px;
     text-align:center;
 }
@@ -67,19 +67,23 @@ video,canvas{
     border:1px solid #333;
     border-radius:12px;
     padding:12px;
-    min-width:150px;
+    min-width:170px;
 }
 .big{
-    font-size:22px;
+    font-size:18px;
     font-weight:bold;
     color:#4cc9f0;
+}
+.small{
+    font-size:14px;
+    color:#aaa;
 }
 </style>
 </head>
 
 <body>
 <div class="container">
-<h1>🧠 Human Activity Detector</h1>
+<h1>🧠 Activity + Movement Detector</h1>
 
 <div class="video-box">
     <video id="video" autoplay playsinline></video>
@@ -96,7 +100,6 @@ video,canvas{
 <div class="boxes" id="boxes"></div>
 </div>
 
-<!-- MediaPipe -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
@@ -109,28 +112,40 @@ const boxes = document.getElementById("boxes");
 const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
 
-let camera, running=false;
+let running=false, camera;
 let lastTime=0;
 const INTERVAL=200;
 
-const ACTIVITY_EMOJI={
-    SCREEN:"👀 Looking at Screen",
-    PHONE:"📱 Using Phone",
-    TALKING:"🗣️ Talking",
-    SLEEPING:"😴 Sleeping",
-    DISTRACTED:"🤷 Distracted",
-    IDLE:"🧍 Idle"
+// ---- HISTORY (STABILITY) ----
+const activityHistory = new Map();
+const movementHistory = new Map();
+const prevCenters = new Map();
+const HISTORY_SIZE = 15;
+
+const ACTIVITY={
+  SCREEN:"👀 Looking",
+  PHONE:"📱 Phone",
+  TALKING:"🗣️ Talking",
+  SLEEPING:"😴 Sleeping",
+  DISTRACTED:"🤷 Distracted",
+  IDLE:"🧍 Idle"
+};
+
+const MOVEMENT={
+  STILL:"🧍 Still",
+  SMALL:"🚶 Small Move",
+  LARGE:"🏃 Large Move"
 };
 
 const faceMesh = new FaceMesh({
-    locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`
+  locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`
 });
 
 faceMesh.setOptions({
-    maxNumFaces:2,
-    refineLandmarks:true,
-    minDetectionConfidence:0.5,
-    minTrackingConfidence:0.5
+  maxNumFaces:2,
+  refineLandmarks:true,
+  minDetectionConfidence:0.5,
+  minTrackingConfidence:0.5
 });
 
 faceMesh.onResults(onResults);
@@ -143,110 +158,152 @@ startBtn.onclick=startCamera;
 stopBtn.onclick=stopCamera;
 
 async function startCamera(){
-    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}});
-    video.srcObject=stream;
-    running=true;
+  const stream = await navigator.mediaDevices.getUserMedia({video:true});
+  video.srcObject=stream;
+  running=true;
 
-    camera=new Camera(video,{
-        onFrame:async()=>{
-            const now=Date.now();
-            if(now-lastTime>INTERVAL){
-                lastTime=now;
-                await faceMesh.send({image:video});
-            }
-        }
-    });
-    camera.start();
-
-    startBtn.hidden=true;
-    stopBtn.hidden=false;
-    statusEl.textContent="Detecting activity…";
+  camera=new Camera(video,{
+    onFrame:async()=>{
+      const now=Date.now();
+      if(now-lastTime>INTERVAL){
+        lastTime=now;
+        await faceMesh.send({image:video});
+      }
+    }
+  });
+  camera.start();
+  startBtn.hidden=true;
+  stopBtn.hidden=false;
+  statusEl.textContent="Detecting…";
 }
 
 function stopCamera(){
-    running=false;
-    video.srcObject.getTracks().forEach(t=>t.stop());
-    startBtn.hidden=false;
-    stopBtn.hidden=true;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    boxes.innerHTML="";
-    statusEl.textContent="Stopped";
+  running=false;
+  video.srcObject.getTracks().forEach(t=>t.stop());
+  startBtn.hidden=false;
+  stopBtn.hidden=true;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  boxes.innerHTML="";
+  statusEl.textContent="Stopped";
 }
 
 function onResults(res){
-    canvas.width=video.videoWidth;
-    canvas.height=video.videoHeight;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    boxes.innerHTML="";
+  canvas.width=video.videoWidth;
+  canvas.height=video.videoHeight;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  boxes.innerHTML="";
 
-    if(!res.multiFaceLandmarks){
-        statusEl.textContent="No face detected";
-        return;
-    }
+  if(!res.multiFaceLandmarks){
+    statusEl.textContent="No face detected";
+    return;
+  }
 
-    statusEl.textContent=`Faces detected: ${res.multiFaceLandmarks.length}`;
+  statusEl.textContent=`Faces: ${res.multiFaceLandmarks.length}`;
 
-    res.multiFaceLandmarks.forEach((lm,i)=>{
-        const activity=detectActivity(lm);
-        drawBox(lm,i,activity);
-        addBox(i,activity);
-    });
+  res.multiFaceLandmarks.forEach((lm,i)=>{
+    const activity = detectActivity(lm,i);
+    const movement = detectMovement(lm,i);
+    drawBox(lm,i,activity,movement);
+    addBox(i,activity,movement);
+  });
 }
 
-function detectActivity(lm){
-    const eyeOpen=(dist(lm[159],lm[145])+dist(lm[386],lm[374]))/2;
-    const mouthOpen=dist(lm[13],lm[14]);
-    const headDown=lm[1].y>0.55;
-    const headTurn=Math.abs(lm[33].x-lm[263].x)>0.35;
+// ---------- ACTIVITY ----------
+function detectActivity(lm,i){
+  const faceHeight = dist(lm[10],lm[152]);
+  const eyeOpen = (
+    dist(lm[159],lm[145]) + dist(lm[386],lm[374])
+  )/(2*faceHeight);
+  const mouthOpen = dist(lm[13],lm[14])/faceHeight;
+  const headDown = lm[1].y > 0.55;
+  const headTurn = Math.abs(lm[33].x-lm[263].x)>0.35;
 
-    if(eyeOpen<0.01) return "SLEEPING";
-    if(mouthOpen>0.04) return "TALKING";
-    if(headDown) return "PHONE";
-    if(headTurn) return "DISTRACTED";
-    if(eyeOpen>0.025) return "SCREEN";
+  let scores={
+    SLEEPING: eyeOpen<0.015?3:0,
+    TALKING: mouthOpen>0.06?3:0,
+    PHONE: headDown?2:0,
+    DISTRACTED: headTurn?2:0,
+    SCREEN: eyeOpen>0.025?1:0,
+    IDLE:1
+  };
 
-    return "IDLE";
+  let act = Object.keys(scores).reduce((a,b)=>scores[a]>scores[b]?a:b);
+
+  return smooth(activityHistory,i,act);
 }
 
-function drawBox(lm,i,activity){
-    let minX=1,maxX=0,minY=1,maxY=0;
-    lm.forEach(p=>{
-        minX=Math.min(minX,p.x);
-        maxX=Math.max(maxX,p.x);
-        minY=Math.min(minY,p.y);
-        maxY=Math.max(maxY,p.y);
-    });
+// ---------- MOVEMENT ----------
+function detectMovement(lm,i){
+  const center = lm[1]; // nose
+  if(!prevCenters.has(i)){
+    prevCenters.set(i,center);
+    return MOVEMENT.STILL;
+  }
 
-    ctx.strokeStyle="#4cc9f0";
-    ctx.lineWidth=2;
-    ctx.strokeRect(
-        minX*canvas.width,
-        minY*canvas.height,
-        (maxX-minX)*canvas.width,
-        (maxY-minY)*canvas.height
-    );
+  const prev = prevCenters.get(i);
+  const moveDist = Math.hypot(center.x-prev.x,center.y-prev.y);
+  prevCenters.set(i,center);
 
-    ctx.fillStyle="#fff";
-    ctx.font="14px Arial";
-    ctx.fillText(
-        `Face ${i+1}: ${ACTIVITY_EMOJI[activity]}`,
-        minX*canvas.width,
-        minY*canvas.height-8
-    );
+  let mv = moveDist<0.005 ? MOVEMENT.STILL :
+           moveDist<0.02 ? MOVEMENT.SMALL :
+           MOVEMENT.LARGE;
+
+  return smooth(movementHistory,i,mv);
 }
 
-function addBox(i,activity){
-    const d=document.createElement("div");
-    d.className="box";
-    d.innerHTML=`
-        <div>Face ${i+1}</div>
-        <div class="big">${ACTIVITY_EMOJI[activity]}</div>
-    `;
-    boxes.appendChild(d);
+// ---------- SMOOTHING ----------
+function smooth(map,i,value){
+  if(!map.has(i)) map.set(i,[]);
+  const arr = map.get(i);
+  arr.push(value);
+  if(arr.length>HISTORY_SIZE) arr.shift();
+
+  const freq={};
+  arr.forEach(v=>freq[v]=(freq[v]||0)+1);
+  return Object.keys(freq).reduce((a,b)=>freq[a]>freq[b]?a:b);
+}
+
+// ---------- DRAW ----------
+function drawBox(lm,i,activity,movement){
+  let minX=1,maxX=0,minY=1,maxY=0;
+  lm.forEach(p=>{
+    minX=Math.min(minX,p.x);
+    maxX=Math.max(maxX,p.x);
+    minY=Math.min(minY,p.y);
+    maxY=Math.max(maxY,p.y);
+  });
+
+  ctx.strokeStyle="#4cc9f0";
+  ctx.lineWidth=2;
+  ctx.strokeRect(
+    minX*canvas.width,
+    minY*canvas.height,
+    (maxX-minX)*canvas.width,
+    (maxY-minY)*canvas.height
+  );
+
+  ctx.fillStyle="#fff";
+  ctx.font="14px Arial";
+  ctx.fillText(
+    `Face ${i+1}: ${ACTIVITY[activity]} | ${movement}`,
+    minX*canvas.width,
+    minY*canvas.height-8
+  );
+}
+
+function addBox(i,activity,movement){
+  const d=document.createElement("div");
+  d.className="box";
+  d.innerHTML=`
+    <div>Face ${i+1}</div>
+    <div class="big">${ACTIVITY[activity]}</div>
+    <div class="small">${movement}</div>
+  `;
+  boxes.appendChild(d);
 }
 
 function dist(a,b){
-    return Math.hypot(a.x-b.x,a.y-b.y);
+  return Math.hypot(a.x-b.x,a.y-b.y);
 }
 </script>
 </body>
