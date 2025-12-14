@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Emotion Detector</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #000;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #4cc9f0;
+            text-shadow: 0 0 10px rgba(76, 201, 240, 0.5);
+        }
+        
+        .subtitle {
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: #111;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 2px solid #333;
+        }
+        
+        video, canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .emotion-display {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 1px solid #333;
+        }
+        
+        .emotion-label {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        
+        .emotion-text {
+            font-size: 32px;
+            font-weight: bold;
+            min-height: 40px;
+            color: #4cc9f0;
+        }
+        
+        .confidence {
+            font-size: 14px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        button {
+            background: #4cc9f0;
+            color: black;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 150px;
+        }
+        
+        button:hover {
+            background: #3ab8df;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 201, 240, 0.4);
+        }
+        
+        button:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        #stopBtn {
+            background: #f04c4c;
+        }
+        
+        #stopBtn:hover {
+            background: #df3a3a;
+        }
+        
+        .status {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #4cc9f0;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #333;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #4cc9f0;
+        }
+        
+        .instructions {
+            text-align: left;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #888;
+            border: 1px solid #333;
+        }
+        
+        .instructions h3 {
+            color: #4cc9f0;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .instructions ul {
+            list-style: none;
+            padding-left: 10px;
+        }
+        
+        .instructions li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .instructions li:before {
+            content: "•";
+            color: #4cc9f0;
+            position: absolute;
+            left: 0;
+        }
+        
+        @media (max-width: 600px) {
+            .video-container {
+                height: 300px;
+            }
+            
+            .emotion-text {
+                font-size: 24px;
+            }
+            
+            button {
+                min-width: 130px;
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 Face Emotion Detector</h1>
+        <p class="subtitle">Real-time facial expression analysis</p>
+        
+        <div class="video-container">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas"></canvas>
+            <div class="loading" id="loading">
+                <p>🔄 Loading AI Model...</p>
+                <div class="status" id="statusText">Initializing...</div>
+            </div>
+        </div>
+        
+        <div class="status" id="status"></div>
+        
+        <div class="emotion-display">
+            <div class="emotion-label">CURRENT EMOTION</div>
+            <div class="emotion-text" id="emotion">--</div>
+            <div class="confidence" id="confidence">Click Start to begin</div>
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn" onclick="startCamera()" disabled>Loading...</button>
+            <button id="stopBtn" onclick="stopCamera()" class="hidden">Stop Camera</button>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to Use:</h3>
+            <ul>
+                <li>Allow camera access when prompted</li>
+                <li>Ensure good lighting on your face</li>
+                <li>Try these expressions:</li>
+                <li>😊 Smile for HAPPY</li>
+                <li>😮 Open mouth for SURPRISED</li>
+                <li>😔 Frown for SAD</li>
+                <li>😠 Squint for ANGRY</li>
+                <li>😴 Close eyes for SLEEPY</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const emotionElement = document.getElementById('emotion');
+        const confidenceElement = document.getElementById('confidence');
+        const statusElement = document.getElementById('status');
+        const statusText = document.getElementById('statusText');
+        const loadingElement = document.getElementById('loading');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        
+        // State variables
+        let faceMesh = null;
+        let cameraRunning = false;
+        let emotionHistory = [];
+        let isModelLoaded = false;
+        
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            statusText.textContent = 'Loading MediaPipe scripts...';
+            loadMediaPipe();
+        });
+        
+        // Load MediaPipe from CDN
+        function loadMediaPipe() {
+            // Create script elements
+            const faceMeshScript = document.createElement('script');
+            faceMeshScript.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js';
+            faceMeshScript.crossOrigin = 'anonymous';
+            
+            const cameraUtilsScript = document.createElement('script');
+            cameraUtilsScript.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js';
+            cameraUtilsScript.crossOrigin = 'anonymous';
+            
+            const drawingUtilsScript = document.createElement('script');
+            drawingUtilsScript.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js';
+            drawingUtilsScript.crossOrigin = 'anonymous';
+            
+            // Load scripts in sequence
+            faceMeshScript.onload = () => {
+                statusText.textContent = 'Loaded Face Mesh...';
+                document.head.appendChild(cameraUtilsScript);
+                
+                cameraUtilsScript.onload = () => {
+                    statusText.textContent = 'Loaded Camera Utils...';
+                    document.head.appendChild(drawingUtilsScript);
+                    
+                    drawingUtilsScript.onload = () => {
+                        statusText.textContent = 'Initializing FaceMesh...';
+                        setTimeout(() => {
+                            initFaceMesh();
+                        }, 500);
+                    };
+                    
+                    drawingUtilsScript.onerror = () => {
+                        showError('Failed to load drawing utils');
+                    };
+                };
+                
+                cameraUtilsScript.onerror = () => {
+                    showError('Failed to load camera utils');
+                };
+            };
+            
+            faceMeshScript.onerror = () => {
+                showError('Failed to load FaceMesh. Check internet connection.');
+            };
+            
+            document.head.appendChild(faceMeshScript);
+        }
+        
+        function showError(message) {
+            statusText.textContent = `Error: ${message}`;
+            statusText.style.color = '#f04c4c';
+            startBtn.textContent = 'Error - Refresh Page';
+            startBtn.disabled = true;
+        }
+        
+        function initFaceMesh() {
+            try {
+                if (typeof FaceMesh === 'undefined') {
+                    throw new Error('FaceMesh not loaded');
+                }
+                
+                faceMesh = new FaceMesh({
+                    locateFile: (file) => {
+                        return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+                    }
+                });
+                
+                faceMesh.setOptions({
+                    maxNumFaces: 1,
+                    refineLandmarks: true,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5,
+                    selfieMode: true
+                });
+                
+                faceMesh.onResults(onResults);
+                
+                // Update UI
+                isModelLoaded = true;
+                startBtn.disabled = false;
+                startBtn.textContent = '🎥 Start Camera';
+                statusText.textContent = '✅ AI Model Loaded!';
+                statusElement.textContent = 'Ready to detect emotions';
+                
+                // Hide loading after a delay
+                setTimeout(() => {
+                    loadingElement.classList.add('hidden');
+                }, 1000);
+                
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+        
+        function onResults(results) {
+            if (!cameraRunning) return;
+            
+            // Set canvas dimensions
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw video (mirrored)
+            ctx.save();
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
+            
+            // Check for face
+            if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) {
+                emotionElement.textContent = 'No face detected';
+                confidenceElement.textContent = 'Make sure your face is visible';
+                statusElement.textContent = 'Looking for face...';
+                return;
+            }
+            
+            const landmarks = results.multiFaceLandmarks[0];
+            
+            // Get key points
+            const leftEye = [landmarks[33], landmarks[160], landmarks[158], landmarks[133]];
+            const rightEye = [landmarks[362], landmarks[385], landmarks[387], landmarks[263]];
+            const mouth = [landmarks[13], landmarks[14], landmarks[61], landmarks[291]];
+            
+            // Calculate metrics
+            const eyeOpenness = (getDistance(leftEye[0], leftEye[1]) + getDistance(rightEye[0], rightEye[1])) / 2;
+            const mouthOpenness = getDistance(mouth[0], mouth[1]);
+            const mouthWidth = getDistance(mouth[2], mouth[3]);
+            
+            // Detect emotion
+            let emotion = 'Neutral 😐';
+            let confidence = 70;
+            
+            if (mouthOpenness > 0.08 && mouthWidth > 0.15) {
+                emotion = 'Happy 😊';
+                confidence = Math.min(95, 70 + (mouthOpenness * 200));
+            } else if (mouthOpenness > 0.1) {
+                emotion = 'Surprised 😮';
+                confidence = Math.min(95, 70 + (mouthOpenness * 150));
+            } else if (eyeOpenness < 0.02) {
+                emotion = 'Sleepy 😴';
+                confidence = Math.min(95, 70 + ((0.02 - eyeOpenness) * 1000));
+            } else if (mouthOpenness < 0.02 && mouthWidth < 0.1) {
+                emotion = 'Sad 😔';
+                confidence = 75;
+            } else if (eyeOpenness < 0.015 && mouthWidth < 0.08) {
+                emotion = 'Angry 😠';
+                confidence = 75;
+            }
+            
+            // Update display
+            emotionElement.textContent = emotion;
+            confidenceElement.textContent = `Confidence: ${confidence}%`;
+            statusElement.textContent = 'Detecting emotions...';
+            
+            // Draw landmarks
+            ctx.save();
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            
+            // Simple face points drawing
+            ctx.fillStyle = '#4cc9f0';
+            [33, 133, 362, 263, 13, 14, 61, 291].forEach(index => {
+                const point = landmarks[index];
+                ctx.beginPath();
+                ctx.arc(point.x * canvas.width, point.y * canvas.height, 3, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            
+            ctx.restore();
+            
+            // Continue processing
+            if (cameraRunning) {
+                requestAnimationFrame(() => {
+                    faceMesh.send({ image: video });
+                });
+            }
+        }
+        
+        function getDistance(p1, p2) {
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        async function startCamera() {
+            if (!isModelLoaded) {
+                alert('AI model is still loading. Please wait...');
+                return;
+            }
+            
+            try {
+                statusElement.textContent = 'Requesting camera access...';
+                startBtn.disabled = true;
+                
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'user',
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    },
+                    audio: false
+                });
+                
+                video.srcObject = stream;
+                cameraRunning = true;
+                
+                video.onloadedmetadata = () => {
+                    // Update UI
+                    startBtn.classList.add('hidden');
+                    stopBtn.classList.remove('hidden');
+                    statusElement.textContent = 'Camera ready! Detecting...';
+                    
+                    // Start detection
+                    faceMesh.send({ image: video });
+                };
+                
+            } catch (error) {
+                console.error('Camera error:', error);
+                let errorMessage = 'Camera access denied';
+                
+                if (error.name === 'NotFoundError') {
+                    errorMessage = 'No camera found';
+                } else if (error.name === 'NotAllowedError') {
+                    errorMessage = 'Camera permission denied';
+                } else if (error.name === 'NotReadableError') {
+                    errorMessage = 'Camera is in use by another app';
+                }
+                
+                statusElement.textContent = `Error: ${errorMessage}`;
+                emotionElement.textContent = 'Camera Error';
+                confidenceElement.textContent = 'Please allow camera access';
+                startBtn.disabled = false;
+                startBtn.textContent = 'Try Again';
+            }
+        }
+        
+        function stopCamera() {
+            cameraRunning = false;
+            
+            if (video.srcObject) {
+                const tracks = video.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Update UI
+            startBtn.classList.remove('hidden');
+            startBtn.disabled = false;
+            stopBtn.classList.add('hidden');
+            emotionElement.textContent = '--';
+            confidenceElement.textContent = 'Camera stopped';
+            statusElement.textContent = 'Ready to start';
+        }
+        
+        // Handle page visibility
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && cameraRunning) {
+                // Save state but don't stop camera
+                statusElement.textContent = 'Tab inactive - detection paused';
+            }
+        });
+    </script>
+</body>
+</html>
