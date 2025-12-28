@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini 2.0 Flash Chat</title>
+    <style>
+        /* CSS STYLES */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 500px;
+            height: 80vh;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        header {
+            background: #0b57d0;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        #chat-box {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .message {
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+        .user {
+            background: #0b57d0;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        .ai {
+            background: #f1f3f4;
+            color: #1f1f1f;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 16px;
+        }
+        button {
+            background: #0b57d0;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover { background: #0842a0; }
+        button:disabled { background: #ccc; }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <header>Gemini 2.0 Flash</header>
+        <div id="chat-box">
+            <div class="message ai">Hello! How can I help you today?</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Ask me anything...">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+    }
+    </script>
+    <script type="module">
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+
+        // 1. PLACE YOUR NEW API KEY HERE
+        const API_KEY = "PASTE_YOUR_NEW_KEY_HERE";
+        
+        const genAI = new GoogleGenerativeAI(API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        async function chat() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            // User message
+            addMessage(text, 'user');
+            userInput.value = '';
+            sendBtn.disabled = true;
+
+            try {
+                // Call Gemini 2.0 Flash
+                const result = await model.generateContent(text);
+                const response = await result.response;
+                addMessage(response.text(), 'ai');
+            } catch (error) {
+                addMessage("Error: " + error.message, 'ai');
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+
+        function addMessage(text, sender) {
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            div.innerText = text;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        sendBtn.addEventListener('click', chat);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') chat();
+        });
+    </script>
+</body>
+</html>
