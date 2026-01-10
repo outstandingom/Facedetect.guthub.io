@@ -7,19 +7,43 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
 
     <style>
         body { margin: 0; background: #050510; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
         canvas { display: block; }
         
-        #container { position: relative; width: 100vw; height: 100vh; }
+        #container { position: relative; width: 100%; height: 100vh; }
         
-        /* Camera Preview - Minimal for performance */
-        #webcam { 
-            position: absolute; top: 10px; right: 10px; 
-            width: 80px; height: 60px; 
-            border: 1px solid #00ffcc; border-radius: 8px; 
-            transform: scaleX(-1); z-index: 10; opacity: 0.7;
+        /* --- Camera Container --- */
+        /* Increased size and added container for overlay */
+        #camera-container {
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            width: 200px; /* Increased size */
+            height: 150px; 
+            z-index: 10;
+            border: 2px solid #00ffcc; 
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+        }
+
+        /* Video and Overlay Canvas must stack perfectly */
+        #webcam, #debugCanvas { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            transform: scaleX(-1); /* Mirror effect */
+            object-fit: cover;
+        }
+
+        #debugCanvas {
+            z-index: 11; /* Sit on top of video */
         }
 
         .menu {
@@ -33,7 +57,9 @@
             margin-top: 20px; padding: 15px 40px; font-size: 1.5rem; 
             background: #ff3366; color: white; border: none; border-radius: 50px; 
             font-weight: bold; box-shadow: 0 5px 15px rgba(255, 51, 102, 0.4);
+            cursor: pointer;
         }
+        button:active { transform: scale(0.95); }
 
         #score-ui {
             position: absolute; top: 20px; left: 20px;
@@ -46,11 +72,16 @@
 <div id="container">
     <div id="score-ui">Score: 0</div>
     
+    <div id="camera-container">
+        <video id="webcam" autoplay playsinline></video>
+        <canvas id="debugCanvas"></canvas>
+    </div>
+
     <div id="start-menu" class="menu">
         <h1>SPACE INUO</h1>
         <p>Propel 👨‍🚀 using your hand!</p>
         <button onclick="startGame()">LAUNCH</button>
-        <p style="font-size: 0.8rem; margin-top: 20px; opacity: 0.6;">(Grant camera access for gesture control)</p>
+        <p style="font-size: 0.8rem; margin-top: 20px; opacity: 0.6;">(Grant camera access to play)</p>
     </div>
 
     <div id="game-over" class="menu" style="display: none;">
@@ -59,18 +90,29 @@
         <button onclick="startGame()">RETRY</button>
     </div>
 
-    <video id="webcam" autoplay playsinline></video>
     <canvas id="gameCanvas"></canvas>
 </div>
 
 <script>
+    // Game Canvas
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    const video = document.getElementById('webcam');
     
-    // Resize canvas to fit any phone
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    // Camera & Debug Elements
+    const video = document.getElementById('webcam');
+    const debugCanvas = document.getElementById('debugCanvas');
+    const debugCtx = debugCanvas.getContext('2d');
+    
+    // Resize Logic
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        // Match debug canvas resolution to CSS size for crisp drawing
+        debugCanvas.width = 200;
+        debugCanvas.height = 150;
+    }
+    window.addEventListener('resize', resize);
+    resize();
 
     let inuoX = canvas.width / 2;
     let targetX = canvas.width / 2;
@@ -79,31 +121,47 @@
     let enemies = [];
     const emojis = ["♟️","🤖","👻","👽","💀","👺","👹","🌚","👾","🦕","🐍","🐊","🐒"];
 
-    // --- OPTIMIZED HAND TRACKING ---
+    // --- MEDIA PIPE HANDS SETUP ---
     const hands = new Hands({
         locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
     });
 
     hands.setOptions({
         maxNumHands: 1,
-        modelComplexity: 0, // Lower complexity = Faster on Android
+        modelComplexity: 1, // Increased slightly for better tracking accuracy
         minDetectionConfidence: 0.5,
         minTrackingConfidence: 0.5
     });
 
     hands.onResults(results => {
+        // 1. Draw Visual Feedback (The Skeleton)
+        debugCtx.save();
+        debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
+        
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-            // Use landmark 9 (middle of palm)
-            let x = results.multiHandLandmarks[0][9].x;
-            targetX = (1 - x) * canvas.width; 
+            for (const landmarks of results.multiHandLandmarks) {
+                // Draw Connectors (Bones)
+                drawConnectors(debugCtx, landmarks, HAND_CONNECTIONS, 
+                             {color: '#00ffcc', lineWidth: 2});
+                // Draw Landmarks (Joints)
+                drawLandmarks(debugCtx, landmarks, 
+                            {color: '#ff3366', lineWidth: 1, radius: 3});
+
+                // 2. Game Logic: Use Index Finger Tip (Landmark 8) or Palm (9)
+                let x = landmarks[9].x; 
+                targetX = (1 - x) * canvas.width; // Invert X for mirror effect
+            }
         }
+        debugCtx.restore();
     });
 
+    // Start Camera
     const camera = new Camera(video, {
         onFrame: async () => {
-            if (gameActive) await hands.send({image: video});
+            // Always send to hands to keep preview active
+            await hands.send({image: video});
         },
-        width: 480, height: 360
+        width: 640, height: 480
     });
     camera.start();
 
@@ -114,7 +172,7 @@
                 x: Math.random() * (canvas.width - 40) + 20,
                 y: -50,
                 char: emojis[Math.floor(Math.random() * emojis.length)],
-                speed: 5 + (score / 10)
+                speed: 5 + (score / 15)
             });
         }
     }
@@ -138,13 +196,13 @@
     function update() {
         if (!gameActive) return;
 
-        // Smooth steering
-        inuoX += (targetX - inuoX) * 0.2;
+        // Smooth movement
+        inuoX += (targetX - inuoX) * 0.15;
 
         enemies.forEach((e, i) => {
             e.y += e.speed;
             
-            // Collision detection
+            // Collision
             let dist = Math.hypot(e.x - inuoX, e.y - (canvas.height - 100));
             if (dist < 40) gameOver();
 
@@ -162,10 +220,11 @@
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // Draw Stars
-        ctx.fillStyle = "white";
-        for(let i=0; i<10; i++) ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        for(let i=0; i<5; i++) 
+            ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
 
-        // Draw Inuo 👨‍🚀
+        // Draw Player
         ctx.font = "60px Arial";
         ctx.textAlign = "center";
         ctx.fillText("👨‍🚀", inuoX, canvas.height - 100);
@@ -182,7 +241,7 @@
 
     draw();
 
-    // Backup Touch Controls for testing
+    // Fallback Touch Controls
     window.addEventListener('touchmove', (e) => {
         targetX = e.touches[0].clientX;
     });
