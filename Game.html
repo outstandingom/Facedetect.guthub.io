@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Space Inuo Mobile</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+    <style>
+        body { margin: 0; background: #050510; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        canvas { display: block; }
+        
+        #container { position: relative; width: 100vw; height: 100vh; }
+        
+        /* Camera Preview - Minimal for performance */
+        #webcam { 
+            position: absolute; top: 10px; right: 10px; 
+            width: 80px; height: 60px; 
+            border: 1px solid #00ffcc; border-radius: 8px; 
+            transform: scaleX(-1); z-index: 10; opacity: 0.7;
+        }
+
+        .menu {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.9);
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 100; text-align: center; padding: 20px;
+        }
+
+        h1 { color: #00ffcc; font-size: 3rem; margin: 0; text-shadow: 0 0 15px #00ffcc; }
+        button { 
+            margin-top: 20px; padding: 15px 40px; font-size: 1.5rem; 
+            background: #ff3366; color: white; border: none; border-radius: 50px; 
+            font-weight: bold; box-shadow: 0 5px 15px rgba(255, 51, 102, 0.4);
+        }
+
+        #score-ui {
+            position: absolute; top: 20px; left: 20px;
+            font-size: 1.5rem; color: #00ffcc; font-weight: bold; z-index: 50;
+        }
+    </style>
+</head>
+<body>
+
+<div id="container">
+    <div id="score-ui">Score: 0</div>
+    
+    <div id="start-menu" class="menu">
+        <h1>SPACE INUO</h1>
+        <p>Propel 👨‍🚀 using your hand!</p>
+        <button onclick="startGame()">LAUNCH</button>
+        <p style="font-size: 0.8rem; margin-top: 20px; opacity: 0.6;">(Grant camera access for gesture control)</p>
+    </div>
+
+    <div id="game-over" class="menu" style="display: none;">
+        <h1 style="color:#ff3366">CRASHED</h1>
+        <h2 id="final-score">Score: 0</h2>
+        <button onclick="startGame()">RETRY</button>
+    </div>
+
+    <video id="webcam" autoplay playsinline></video>
+    <canvas id="gameCanvas"></canvas>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const video = document.getElementById('webcam');
+    
+    // Resize canvas to fit any phone
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let inuoX = canvas.width / 2;
+    let targetX = canvas.width / 2;
+    let score = 0;
+    let gameActive = false;
+    let enemies = [];
+    const emojis = ["♟️","🤖","👻","👽","💀","👺","👹","🌚","👾","🦕","🐍","🐊","🐒"];
+
+    // --- OPTIMIZED HAND TRACKING ---
+    const hands = new Hands({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+
+    hands.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 0, // Lower complexity = Faster on Android
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
+    });
+
+    hands.onResults(results => {
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+            // Use landmark 9 (middle of palm)
+            let x = results.multiHandLandmarks[0][9].x;
+            targetX = (1 - x) * canvas.width; 
+        }
+    });
+
+    const camera = new Camera(video, {
+        onFrame: async () => {
+            if (gameActive) await hands.send({image: video});
+        },
+        width: 480, height: 360
+    });
+    camera.start();
+
+    // --- GAME ENGINE ---
+    function spawnEnemy() {
+        if (Math.random() < 0.05) {
+            enemies.push({
+                x: Math.random() * (canvas.width - 40) + 20,
+                y: -50,
+                char: emojis[Math.floor(Math.random() * emojis.length)],
+                speed: 5 + (score / 10)
+            });
+        }
+    }
+
+    function startGame() {
+        score = 0;
+        enemies = [];
+        inuoX = canvas.width / 2;
+        gameActive = true;
+        document.getElementById('start-menu').style.display = 'none';
+        document.getElementById('game-over').style.display = 'none';
+        document.getElementById('score-ui').innerText = "Score: 0";
+    }
+
+    function gameOver() {
+        gameActive = false;
+        document.getElementById('game-over').style.display = 'flex';
+        document.getElementById('final-score').innerText = "Score: " + score;
+    }
+
+    function update() {
+        if (!gameActive) return;
+
+        // Smooth steering
+        inuoX += (targetX - inuoX) * 0.2;
+
+        enemies.forEach((e, i) => {
+            e.y += e.speed;
+            
+            // Collision detection
+            let dist = Math.hypot(e.x - inuoX, e.y - (canvas.height - 100));
+            if (dist < 40) gameOver();
+
+            if (e.y > canvas.height) {
+                enemies.splice(i, 1);
+                score++;
+                document.getElementById('score-ui').innerText = "Score: " + score;
+            }
+        });
+        spawnEnemy();
+    }
+
+    function draw() {
+        ctx.fillStyle = '#050510';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw Stars
+        ctx.fillStyle = "white";
+        for(let i=0; i<10; i++) ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
+
+        // Draw Inuo 👨‍🚀
+        ctx.font = "60px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("👨‍🚀", inuoX, canvas.height - 100);
+
+        // Draw Enemies
+        ctx.font = "45px Arial";
+        enemies.forEach(e => {
+            ctx.fillText(e.char, e.x, e.y);
+        });
+
+        update();
+        requestAnimationFrame(draw);
+    }
+
+    draw();
+
+    // Backup Touch Controls for testing
+    window.addEventListener('touchmove', (e) => {
+        targetX = e.touches[0].clientX;
+    });
+</script>
+
+</body>
+</html>
