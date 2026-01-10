@@ -15,36 +15,35 @@
         
         #container { position: relative; width: 100%; height: 100vh; }
         
-        /* --- Camera Container --- */
-        /* Increased size and added container for overlay */
+        /* --- Camera Container (FIXED SIZE) --- */
         #camera-container {
             position: absolute; 
             top: 20px; 
             right: 20px; 
-            width: 1000px; /* Increased size */
-            height: 750px; 
+            /* Fixed width to 300px so it doesn't hide the game */
+            width: 300px; 
+            height: 225px; 
             z-index: 10;
             border: 2px solid #00ffcc; 
             border-radius: 12px;
             overflow: hidden;
             background: #000;
             box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+            /* Optional: Make it slightly see-through */
+            opacity: 0.9;
         }
 
-        /* Video and Overlay Canvas must stack perfectly */
         #webcam, #debugCanvas { 
             position: absolute; 
             top: 0; 
             left: 0; 
             width: 100%; 
             height: 100%; 
-            transform: scaleX(-1); /* Mirror effect */
+            transform: scaleX(-1);
             object-fit: cover;
         }
 
-        #debugCanvas {
-            z-index: 11; /* Sit on top of video */
-        }
+        #debugCanvas { z-index: 11; }
 
         .menu {
             position: absolute; inset: 0; background: rgba(0,0,0,0.9);
@@ -63,7 +62,8 @@
 
         #score-ui {
             position: absolute; top: 20px; left: 20px;
-            font-size: 1.5rem; color: #00ffcc; font-weight: bold; z-index: 50;
+            font-size: 2rem; color: #00ffcc; font-weight: bold; z-index: 50;
+            text-shadow: 0 2px 5px black;
         }
     </style>
 </head>
@@ -107,9 +107,9 @@
     function resize() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        // Match debug canvas resolution to CSS size for crisp drawing
-        debugCanvas.width = 200;
-        debugCanvas.height = 150;
+        // Set Debug Canvas to match the CSS container size (300x225)
+        debugCanvas.width = 300;
+        debugCanvas.height = 225;
     }
     window.addEventListener('resize', resize);
     resize();
@@ -128,37 +128,33 @@
 
     hands.setOptions({
         maxNumHands: 1,
-        modelComplexity: 1, // Increased slightly for better tracking accuracy
+        modelComplexity: 1, 
         minDetectionConfidence: 0.5,
         minTrackingConfidence: 0.5
     });
 
     hands.onResults(results => {
-        // 1. Draw Visual Feedback (The Skeleton)
-        debugCtx.save();
+        // Clear debug canvas
         debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
         
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
             for (const landmarks of results.multiHandLandmarks) {
-                // Draw Connectors (Bones)
+                // 1. Draw Visual Feedback (Skeleton)
                 drawConnectors(debugCtx, landmarks, HAND_CONNECTIONS, 
                              {color: '#00ffcc', lineWidth: 2});
-                // Draw Landmarks (Joints)
                 drawLandmarks(debugCtx, landmarks, 
                             {color: '#ff3366', lineWidth: 1, radius: 3});
 
-                // 2. Game Logic: Use Index Finger Tip (Landmark 8) or Palm (9)
+                // 2. Game Logic: Use Palm Center (Landmark 9)
                 let x = landmarks[9].x; 
                 targetX = (1 - x) * canvas.width; // Invert X for mirror effect
             }
         }
-        debugCtx.restore();
     });
 
     // Start Camera
     const camera = new Camera(video, {
         onFrame: async () => {
-            // Always send to hands to keep preview active
             await hands.send({image: video});
         },
         width: 640, height: 480
@@ -167,12 +163,13 @@
 
     // --- GAME ENGINE ---
     function spawnEnemy() {
-        if (Math.random() < 0.05) {
+        // Spawn rate increases slightly with score
+        if (Math.random() < 0.03 + (score * 0.001)) {
             enemies.push({
-                x: Math.random() * (canvas.width - 40) + 20,
+                x: Math.random() * (canvas.width - 60) + 30,
                 y: -50,
                 char: emojis[Math.floor(Math.random() * emojis.length)],
-                speed: 5 + (score / 15)
+                speed: 4 + (score / 20)
             });
         }
     }
@@ -196,17 +193,18 @@
     function update() {
         if (!gameActive) return;
 
-        // Smooth movement
+        // Smooth movement interpolation
         inuoX += (targetX - inuoX) * 0.15;
 
         enemies.forEach((e, i) => {
             e.y += e.speed;
             
-            // Collision
+            // Collision Detection
+            // Using slightly smaller hit radius for fairness
             let dist = Math.hypot(e.x - inuoX, e.y - (canvas.height - 100));
-            if (dist < 40) gameOver();
+            if (dist < 50) gameOver();
 
-            if (e.y > canvas.height) {
+            if (e.y > canvas.height + 50) {
                 enemies.splice(i, 1);
                 score++;
                 document.getElementById('score-ui').innerText = "Score: " + score;
@@ -216,21 +214,22 @@
     }
 
     function draw() {
+        // Draw Game Background
         ctx.fillStyle = '#050510';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // Draw Stars
-        ctx.fillStyle = "rgba(255,255,255,0.5)";
-        for(let i=0; i<5; i++) 
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        for(let i=0; i<8; i++) 
             ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
 
-        // Draw Player
-        ctx.font = "60px Arial";
+        // Draw Player (Inuo)
+        ctx.font = "80px Arial";
         ctx.textAlign = "center";
         ctx.fillText("👨‍🚀", inuoX, canvas.height - 100);
 
         // Draw Enemies
-        ctx.font = "45px Arial";
+        ctx.font = "50px Arial";
         enemies.forEach(e => {
             ctx.fillText(e.char, e.x, e.y);
         });
