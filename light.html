@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enlightens - Rooftop Restaurant</title>
+    <style>
+        :root {
+            --gold: #e2c275;
+            --teal: #4fd9c5;
+            --deep-blue: #1e3a5f;
+            --bg-dark: #050505;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            background-image: radial-gradient(circle at center, #111 0%, #000 100%);
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Background Animation Container */
+        #particle-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Content Layer */
+        .hero-section {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .logo-container img {
+            width: 280px; /* Adjust based on your image size */
+            filter: drop-shadow(0 0 15px rgba(226, 194, 117, 0.4));
+            margin-bottom: 20px;
+        }
+
+        h1.brand-name {
+            font-size: 3.5rem;
+            margin: 0;
+            letter-spacing: 2px;
+            font-weight: 300;
+        }
+
+        .main-heading {
+            font-size: 3rem;
+            margin-top: 40px;
+            font-weight: 600;
+            max-width: 800px;
+        }
+
+        .sub-text {
+            color: var(--gold);
+            font-size: 1.1rem;
+            margin-top: 15px;
+            letter-spacing: 1px;
+        }
+
+        /* Leaf Styles */
+        .leaf {
+            position: absolute;
+            top: -50px;
+            width: 15px;
+            height: 15px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.7;
+            pointer-events: auto; /* Allows interaction */
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { transform: translateY(105vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Interaction Effect */
+        .scatter {
+            transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+            transform: scale(2) rotate(180deg) !important;
+            opacity: 0 !important;
+        }
+
+        .btn-group {
+            margin-top: 40px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+            border: 1px solid var(--gold);
+        }
+
+        .btn-outline { color: var(--gold); background: transparent; }
+        .btn-outline:hover { background: var(--gold); color: #000; }
+    </style>
+</head>
+<body>
+
+    <div id="particle-container"></div>
+
+    <section class="hero-section">
+        <div class="logo-container">
+            <img src="https://via.placeholder.com/300x300/000000/e2c275?text=BUDDHA+TREE" alt="Enlightens Logo">
+        </div>
+        
+        <h1 class="brand-name">Enlightens</h1>
+        
+        <h2 class="main-heading">Enlightens – Where Food Meets Serenity</h2>
+        <p class="sub-text">Premium Rooftop Restaurant • Banquet Hall • Event Destination</p>
+
+        <div class="btn-group">
+            <a href="#" class="btn btn-outline">Explore Menu</a>
+            <a href="#" class="btn btn-outline">Book a Table</a>
+        </div>
+    </section>
+
+    <script>
+        const container = document.getElementById('particle-container');
+        const colors = ['#4fd9c5', '#e2c275', '#1e3a5f']; // Teal, Gold, Blue
+        
+        // Function to create a leaf
+        function createLeaf() {
+            const leaf = document.createElement('div');
+            leaf.className = 'leaf';
+            
+            // Randomize color/SVG
+            const color = colors[Math.floor(Math.random() * colors.size)];
+            const size = Math.random() * 15 + 10;
+            
+            leaf.style.left = Math.random() * 100 + 'vw';
+            leaf.style.width = size + 'px';
+            leaf.style.height = size + 'px';
+            
+            // Leaf SVG with dynamic color
+            leaf.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='${encodeURIComponent(colors[Math.floor(Math.random() * 3)])}'%3E%3Cpath d='M17,8C8,10,5.9,16.17,3.82,21.34L5.71,22l1-2.3A4.49,4.49,0,0,0,8,20C19,20,22,3,22,3,21,5,14,5.25,9,6.25S2,11.5,2,13.5a6.22,6.22,0,0,0,1.75,3.75C7,8,17,8,17,8Z'/%3E%3C/svg%3E")`;
+            
+            const duration = Math.random() * 5 + 5;
+            leaf.style.animationDuration = duration + 's';
+
+            // Interaction: Mouse over or Click
+            const interact = () => {
+                leaf.classList.add('scatter');
+                setTimeout(() => leaf.remove(), 500);
+            };
+
+            leaf.addEventListener('mouseover', interact);
+            leaf.addEventListener('touchstart', interact);
+
+            container.appendChild(leaf);
+
+            // Cleanup
+            setTimeout(() => {
+                if(leaf.parentNode) leaf.remove();
+            }, duration * 1000);
+        }
+
+        // Generate leaves continuously
+        setInterval(createLeaf, 200);
+
+        // Global click effect: scatter leaves near click
+        document.addEventListener('mousedown', (e) => {
+            const leaves = document.querySelectorAll('.leaf');
+            leaves.forEach(leaf => {
+                const rect = leaf.getBoundingClientRect();
+                const dist = Math.hypot(e.clientX - rect.left, e.clientY - rect.top);
+                if (dist < 150) { // If leaf is within 150px of click
+                    leaf.classList.add('scatter');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
