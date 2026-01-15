@@ -18,12 +18,26 @@
             height: 100%;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-dark);
-            background-image: radial-gradient(circle at center, #111 0%, #000 100%);
+            background-image: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
             color: #fff;
             overflow-x: hidden;
+            cursor: none; /* Hides default cursor for the custom glow effect */
         }
 
-        /* Background Animation Container */
+        /* --- 1. Background Layers --- */
+        
+        /* Twinkling Stars Layer */
+        #star-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Falling Leaves Layer */
         #particle-container {
             position: fixed;
             top: 0;
@@ -31,10 +45,42 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 1;
+            z-index: 2;
         }
 
-        /* Content Layer */
+        /* --- 2. Cursor/Finger Glow Effect --- */
+        #cursor-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(226, 194, 117, 0.15) 0%, rgba(79, 217, 197, 0.05) 40%, transparent 70%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: screen;
+            transition: opacity 0.3s;
+            border-radius: 50%;
+            filter: blur(20px);
+        }
+
+        /* Small bright dot in center of cursor */
+        #cursor-dot {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 8px;
+            background: var(--gold);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 10000;
+            box-shadow: 0 0 10px var(--gold);
+        }
+
+        /* --- 3. Main Content --- */
         .hero-section {
             position: relative;
             z-index: 10;
@@ -45,12 +91,21 @@
             min-height: 100vh;
             text-align: center;
             padding: 20px;
+            /* Enhance visibility against stars */
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
         }
 
         .logo-container img {
-            width: 280px; /* Adjust based on your image size */
-            filter: drop-shadow(0 0 15px rgba(226, 194, 117, 0.4));
+            width: 280px; 
+            max-width: 80vw; /* Responsive constraint */
+            filter: drop-shadow(0 0 20px rgba(226, 194, 117, 0.3));
             margin-bottom: 20px;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
         h1.brand-name {
@@ -58,13 +113,15 @@
             margin: 0;
             letter-spacing: 2px;
             font-weight: 300;
+            color: #fff;
         }
 
         .main-heading {
             font-size: 3rem;
-            margin-top: 40px;
+            margin-top: 30px;
             font-weight: 600;
             max-width: 800px;
+            line-height: 1.2;
         }
 
         .sub-text {
@@ -72,9 +129,62 @@
             font-size: 1.1rem;
             margin-top: 15px;
             letter-spacing: 1px;
+            font-weight: 400;
         }
 
-        /* Leaf Styles */
+        /* Buttons */
+        .btn-group {
+            margin-top: 40px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap; /* Allows stacking on mobile */
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 35px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid var(--gold);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            cursor: pointer; /* Restore cursor pointer for buttons */
+        }
+
+        .btn-outline { 
+            color: var(--gold); 
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .btn-outline:hover { 
+            background: var(--gold); 
+            color: #000; 
+            box-shadow: 0 0 20px rgba(226, 194, 117, 0.4);
+            transform: translateY(-3px);
+        }
+
+        /* --- 4. Animation Elements --- */
+        
+        /* Stars Logic */
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0;
+            animation: twinkle var(--duration) ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: var(--max-opacity); transform: scale(1.2); box-shadow: 0 0 10px rgba(255,255,255,0.8); }
+            100% { opacity: 0; transform: scale(0.5); }
+        }
+
+        /* Leaf Logic */
         .leaf {
             position: absolute;
             top: -50px;
@@ -83,8 +193,9 @@
             background-size: contain;
             background-repeat: no-repeat;
             opacity: 0.7;
-            pointer-events: auto; /* Allows interaction */
+            pointer-events: auto; 
             animation: fall linear forwards;
+            filter: drop-shadow(0 0 5px rgba(226, 194, 117, 0.5));
         }
 
         @keyframes fall {
@@ -94,34 +205,40 @@
             100% { transform: translateY(105vh) rotate(360deg); opacity: 0; }
         }
 
-        /* Interaction Effect */
+        /* Scatter interaction */
         .scatter {
             transition: transform 0.5s ease-out, opacity 0.5s ease-out;
             transform: scale(2) rotate(180deg) !important;
             opacity: 0 !important;
         }
 
-        .btn-group {
-            margin-top: 40px;
-            display: flex;
-            gap: 20px;
+        /* --- 5. Mobile Responsiveness --- */
+        @media (max-width: 768px) {
+            h1.brand-name { font-size: 2.5rem; }
+            .main-heading { font-size: 1.8rem; margin-top: 20px; padding: 0 10px; }
+            .sub-text { font-size: 0.9rem; padding: 0 20px; }
+            
+            .btn-group {
+                flex-direction: column;
+                width: 100%;
+                max-width: 250px;
+                gap: 15px;
+            }
+            
+            .btn { width: 100%; box-sizing: border-box; }
+            
+            /* On mobile, show default cursor because touch doesn't have a constant cursor */
+            body, html { cursor: auto; }
+            #cursor-dot { display: none; } /* Hide the physical dot on touch devices */
         }
-
-        .btn {
-            padding: 12px 30px;
-            border-radius: 25px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: 0.3s;
-            border: 1px solid var(--gold);
-        }
-
-        .btn-outline { color: var(--gold); background: transparent; }
-        .btn-outline:hover { background: var(--gold); color: #000; }
     </style>
 </head>
 <body>
 
+    <div id="cursor-glow"></div>
+    <div id="cursor-dot"></div>
+
+    <div id="star-container"></div>
     <div id="particle-container"></div>
 
     <section class="hero-section">
@@ -141,59 +258,127 @@
     </section>
 
     <script>
-        const container = document.getElementById('particle-container');
+        /* --- 1. Cursor/Finger Glow Script --- */
+        const cursorGlow = document.getElementById('cursor-glow');
+        const cursorDot = document.getElementById('cursor-dot');
+
+        const moveCursor = (e) => {
+            // Get X and Y coordinates (support mouse and touch)
+            let x = e.clientX;
+            let y = e.clientY;
+            
+            if(!x && e.touches) {
+                x = e.touches[0].clientX;
+                y = e.touches[0].clientY;
+            }
+
+            // Move the glow and dot
+            if (x && y) {
+                cursorGlow.style.left = x + 'px';
+                cursorGlow.style.top = y + 'px';
+                cursorDot.style.left = x + 'px';
+                cursorDot.style.top = y + 'px';
+            }
+        };
+
+        window.addEventListener('mousemove', moveCursor);
+        window.addEventListener('touchmove', moveCursor);
+
+        /* --- 2. Twinkling Stars Script --- */
+        const starContainer = document.getElementById('star-container');
+        
+        function createStars() {
+            const count = 70; // Number of stars
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                // Random positioning
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                
+                // Random Size
+                const size = Math.random() * 3 + 1; // 1px to 4px
+                
+                // Random Animation Duration
+                const duration = Math.random() * 3 + 2; // 2s to 5s
+                
+                star.style.left = x + '%';
+                star.style.top = y + '%';
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                star.style.setProperty('--duration', duration + 's');
+                star.style.setProperty('--max-opacity', Math.random() * 0.7 + 0.3); // Brightness
+
+                // Occasional Gold Stars
+                if (Math.random() > 0.8) {
+                    star.style.background = '#e2c275';
+                    star.style.boxShadow = '0 0 10px #e2c275';
+                }
+
+                starContainer.appendChild(star);
+            }
+        }
+        createStars();
+
+        /* --- 3. Falling Leaves Script (Preserved & Optimized) --- */
+        const particleContainer = document.getElementById('particle-container');
         const colors = ['#4fd9c5', '#e2c275', '#1e3a5f']; // Teal, Gold, Blue
         
-        // Function to create a leaf
         function createLeaf() {
             const leaf = document.createElement('div');
             leaf.className = 'leaf';
             
-            // Randomize color/SVG
-            const color = colors[Math.floor(Math.random() * colors.size)];
+            const color = colors[Math.floor(Math.random() * colors.length)];
             const size = Math.random() * 15 + 10;
             
             leaf.style.left = Math.random() * 100 + 'vw';
             leaf.style.width = size + 'px';
             leaf.style.height = size + 'px';
             
-            // Leaf SVG with dynamic color
-            leaf.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='${encodeURIComponent(colors[Math.floor(Math.random() * 3)])}'%3E%3Cpath d='M17,8C8,10,5.9,16.17,3.82,21.34L5.71,22l1-2.3A4.49,4.49,0,0,0,8,20C19,20,22,3,22,3,21,5,14,5.25,9,6.25S2,11.5,2,13.5a6.22,6.22,0,0,0,1.75,3.75C7,8,17,8,17,8Z'/%3E%3C/svg%3E")`;
+            // Leaf SVG
+            leaf.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='${encodeURIComponent(color)}'%3E%3Cpath d='M17,8C8,10,5.9,16.17,3.82,21.34L5.71,22l1-2.3A4.49,4.49,0,0,0,8,20C19,20,22,3,22,3,21,5,14,5.25,9,6.25S2,11.5,2,13.5a6.22,6.22,0,0,0,1.75,3.75C7,8,17,8,17,8Z'/%3E%3C/svg%3E")`;
             
             const duration = Math.random() * 5 + 5;
             leaf.style.animationDuration = duration + 's';
 
-            // Interaction: Mouse over or Click
+            // Interaction
             const interact = () => {
                 leaf.classList.add('scatter');
                 setTimeout(() => leaf.remove(), 500);
             };
 
             leaf.addEventListener('mouseover', interact);
-            leaf.addEventListener('touchstart', interact);
+            leaf.addEventListener('touchstart', interact); // Added Touch support
 
-            container.appendChild(leaf);
+            particleContainer.appendChild(leaf);
 
-            // Cleanup
             setTimeout(() => {
                 if(leaf.parentNode) leaf.remove();
             }, duration * 1000);
         }
 
-        // Generate leaves continuously
-        setInterval(createLeaf, 200);
+        setInterval(createLeaf, 300);
 
-        // Global click effect: scatter leaves near click
-        document.addEventListener('mousedown', (e) => {
+        // Global click/touch scatter effect
+        const scatterLeaves = (x, y) => {
             const leaves = document.querySelectorAll('.leaf');
             leaves.forEach(leaf => {
                 const rect = leaf.getBoundingClientRect();
-                const dist = Math.hypot(e.clientX - rect.left, e.clientY - rect.top);
-                if (dist < 150) { // If leaf is within 150px of click
+                const dist = Math.hypot(x - rect.left, y - rect.top);
+                if (dist < 150) {
                     leaf.classList.add('scatter');
                 }
             });
+        };
+
+        document.addEventListener('mousedown', (e) => scatterLeaves(e.clientX, e.clientY));
+        document.addEventListener('touchstart', (e) => {
+             // For touch, prevent default only if needed, but usually okay here
+             const touch = e.touches[0];
+             scatterLeaves(touch.clientX, touch.clientY);
         });
+
     </script>
 </body>
 </html>
