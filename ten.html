@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enlightens - Rooftop Restaurant</title>
+    
+    <style>
+        :root {
+            --gold: #e2c275;
+            --teal: #4fd9c5;
+            --bg-dark: #050505;
+            --deep-blue: #141e30;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            /* Deep, dark radial gradient for depth */
+            background-image: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
+            color: #fff;
+            overflow-x: hidden;
+            cursor: pointer; /* Indicates the screen is interactive */
+        }
+
+        /* --- Background Animation Container --- */
+        #sky-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allows clicks to pass through */
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        /* --- Navigation Bar --- */
+        nav {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 50px;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover { color: var(--gold); }
+
+        .book-btn {
+            background: var(--teal);
+            color: #000 !important;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .book-btn:hover {
+            background: var(--gold);
+            box-shadow: 0 0 15px rgba(226, 194, 117, 0.5);
+        }
+
+        /* --- Main Content --- */
+        .hero-section {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
+            /* Fade background behind text for readability */
+            background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.6) 80%);
+        }
+
+        .buddha-logo {
+            width: 280px;
+            max-width: 80%;
+            filter: drop-shadow(0 0 25px rgba(226, 194, 117, 0.3));
+            margin-bottom: 10px;
+            animation: breathe 4s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 25px rgba(226, 194, 117, 0.3)); }
+            50% { transform: scale(1.02); filter: drop-shadow(0 0 35px rgba(226, 194, 117, 0.6)); }
+        }
+
+        h1.brand-name {
+            font-size: 3.5rem;
+            margin: 0;
+            letter-spacing: 4px;
+            font-weight: 300;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        .main-heading {
+            font-size: 3rem;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            max-width: 800px;
+            line-height: 1.2;
+        }
+
+        .sub-text {
+            color: var(--gold);
+            font-size: 1.1rem;
+            margin-top: 15px;
+            letter-spacing: 1px;
+            margin-bottom: 40px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 35px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+            border: 1px solid var(--gold);
+        }
+
+        .btn-outline { color: var(--gold); background: transparent; }
+        .btn-outline:hover { background: var(--gold); color: #000; box-shadow: 0 0 20px rgba(226, 194, 117, 0.5); }
+
+        /* --- Falling Objects Styles --- */
+        .leaf, .star {
+            position: absolute;
+            pointer-events: auto;
+            animation-name: fall;
+            animation-timing-function: linear;
+            animation-fill-mode: forwards;
+        }
+
+        /* Star Specifics - GLOWING */
+        .star {
+            background: #fff;
+            border-radius: 50%;
+            /* Intense glow effect */
+            box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.8), 0 0 20px 5px rgba(255, 255, 255, 0.4);
+        }
+
+        /* Leaf Specifics */
+        .leaf {
+            width: 20px;
+            height: 20px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.8;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-50px) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Effect when leaves are touched/clicked (Scatter) */
+        .scatter {
+            transition: transform 0.6s ease-out, opacity 0.6s ease-out;
+            transform: scale(3) rotate(180deg) !important;
+            opacity: 0 !important;
+        }
+
+        /* --- MAGIC TOUCH GLOW EFFECT --- */
+        .touch-glow {
+            position: fixed;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            /* Gold/White radial gradient */
+            background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(226, 194, 117, 0.6) 30%, transparent 70%);
+            transform: translate(-50%, -50%) scale(0.5);
+            pointer-events: none;
+            z-index: 9999; /* On top of everything */
+            animation: touchPulse 0.6s ease-out forwards;
+        }
+
+        @keyframes touchPulse {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+        }
+
+        /* --- Responsive Design (Mobile Support) --- */
+        @media (max-width: 768px) {
+            nav {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav-links {
+                display: none; /* Hide full menu on mobile initially */
+                flex-direction: column;
+                width: 100%;
+                background: rgba(5, 5, 5, 0.95);
+                padding: 20px;
+                border-radius: 10px;
+            }
+
+            .nav-links.mobile-visible {
+                display: flex;
+            }
+
+            .nav-toggle {
+                display: block;
+                background: none;
+                border: none;
+                color: white;
+                font-size: 1.5rem;
+                cursor: pointer;
+                position: absolute;
+                right: 20px;
+                top: 20px;
+            }
+
+            h1.brand-name { font-size: 2.5rem; letter-spacing: 2px; }
+            .main-heading { font-size: 2rem; margin-top: 10px; }
+            .buddha-logo { width: 200px; }
+            .sub-text { font-size: 1rem; padding: 0 10px; }
+        }
+
+        /* Desktop menu toggle button (hidden by default) */
+        .nav-toggle {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo-text" style="color:var(--gold)">Enlightens<br><small style="color:#fff; font-weight:400; font-size: 0.8rem;">Rooftop Dining</small></div>
+        
+        <button class="nav-toggle" id="navToggle">☰</button>
+        
+        <div class="nav-links" id="navLinks">
+            <a href="#">Home</a>
+            <a href="#">Menu</a>
+            <a href="#">Ambiance</a>
+            <a href="#">Events</a>
+            <a href="#">Contact</a>
+            <a href="#" class="book-btn">Book Now</a>
+        </div>
+    </nav>
+
+    <div id="sky-container"></div>
+
+    <section class="hero-section">
+        <div class="logo-container">
+            <img src="https://i.ibb.co/0jb7rcCK/logo-bodhi-resize-NGo-Rt3k-U.png" alt="Enlightens Logo" class="buddha-logo">
+        </div>
+        
+        <h1 class="brand-name">Enlightens</h1>
+        
+        <h2 class="main-heading">Where Food Meets Serenity</h2>
+        <p class="sub-text">Premium Rooftop Restaurant • Banquet Hall • Event Destination</p>
+
+        <div class="btn-group">
+            <a href="#" class="btn btn-outline">Explore Menu</a>
+            <a href="#" class="btn btn-outline">Book a Table</a>
+        </div>
+    </section>
+
+    <script>
+        /* --- JavaScript Logic --- */
+
+        const container = document.getElementById('sky-container');
+        const colors = ['#4fd9c5', '#e2c275', '#ffffff']; // Teal, Gold, White
+
+        // Function to create falling elements (Stars or Leaves)
+        function createFallingElement(type) {
+            const el = document.createElement('div');
+            
+            // Random positioning
+            const leftPos = Math.random() * 100;
+            const duration = Math.random() * 8 + 6; // Between 6 and 14 seconds
+            
+            el.style.left = `${leftPos}vw`;
+            el.style.animationDuration = `${duration}s`;
+
+            if (type === 'star') {
+                el.classList.add('star');
+                // Stars are small
+                const size = Math.random() * 3 + 2; // 2px to 5px
+                el.style.width = `${size}px`;
+                el.style.height = `${size}px`;
+                el.style.opacity = Math.random() * 0.7 + 0.3; // Random brightness
+            } else {
+                el.classList.add('leaf');
+                // Leaves are larger
+                const size = Math.random() * 15 + 10;
+                el.style.width = `${size}px`;
+                el.style.height = `${size}px`;
+                
+                // SVG for Leaf
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                el.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='${encodeURIComponent(color)}'%3E%3Cpath d='M17,8C8,10,5.9,16.17,3.82,21.34L5.71,22l1-2.3A4.49,4.49,0,0,0,8,20C19,20,22,3,22,3,21,5,14,5.25,9,6.25S2,11.5,2,13.5a6.22,6.22,0,0,0,1.75,3.75C7,8,17,8,17,8Z'/%3E%3C/svg%3E")`;
+            }
+
+            // Interaction: Scatter element when hovered
+            const scatter = () => {
+                el.classList.add('scatter');
+                setTimeout(() => { if(el.parentNode) el.remove(); }, 600);
+            };
+            el.addEventListener('mouseover', scatter);
+
+            container.appendChild(el);
+
+            // Cleanup after animation ends
+            setTimeout(() => {
+                if(el.parentNode) el.remove();
+            }, duration * 1000);
+        }
+
+        // --- SPAWNING LOOPS ---
+        // Create stars frequently
+        setInterval(() => createFallingElement('star'), 150);
+        // Create leaves less frequently
+        setInterval(() => createFallingElement('leaf'), 600);
+
+
+        // --- MAGIC TOUCH GLOW LOGIC ---
+        function createTouchGlow(x, y) {
+            const glow = document.createElement('div');
+            glow.classList.add('touch-glow');
+            glow.style.left = `${x}px`;
+            glow.style.top = `${y}px`;
+            
+            document.body.appendChild(glow);
+
+            // Remove after animation (0.6s)
+            setTimeout(() => {
+                glow.remove();
+            }, 600);
+        }
+
+        // Handle Mouse Click
+        document.addEventListener('click', (e) => {
+            createTouchGlow(e.clientX, e.clientY);
+            triggerScatter(e.clientX, e.clientY);
+        });
+
+        // Handle Touch (Mobile)
+        document.addEventListener('touchstart', (e) => {
+            // Get the first touch point
+            const touch = e.touches[0];
+            createTouchGlow(touch.clientX, touch.clientY);
+            triggerScatter(touch.clientX, touch.clientY);
+        }, {passive: true});
+
+        // Helper: Also scatter nearby leaves when clicking/touching empty space
+        function triggerScatter(x, y) {
+            const leaves = document.querySelectorAll('.leaf');
+            leaves.forEach(leaf => {
+                const rect = leaf.getBoundingClientRect();
+                const dist = Math.hypot(x - rect.left, y - rect.top);
+                if (dist < 150) { // Impact radius
+                    leaf.classList.add('scatter');
+                }
+            });
+        }
+
+        // Mobile Navigation Toggle
+        const navToggle = document.getElementById('navToggle');
+        const navLinks = document.getElementById('navLinks');
+        
+        if (navToggle && navLinks) {
+            navToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                navLinks.classList.toggle('mobile-visible');
+            });
+            
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!navLinks.contains(e.target) && e.target !== navToggle) {
+                    navLinks.classList.remove('mobile-visible');
+                }
+            });
+            
+            // Close menu when clicking a link
+            navLinks.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.classList.remove('mobile-visible');
+                });
+            });
+        }
+
+    </script>
+</body>
+</html>
