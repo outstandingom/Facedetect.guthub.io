@@ -19,11 +19,10 @@
             height: 100%;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-dark);
-            /* Deep, dark radial gradient for depth */
             background-image: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
             color: #fff;
             overflow-x: hidden;
-            cursor: pointer; /* Indicates the screen is interactive */
+            cursor: pointer;
         }
 
         /* --- Background Animation Container --- */
@@ -33,7 +32,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none; /* Allows clicks to pass through */
+            pointer-events: none;
             z-index: 0;
             overflow: hidden;
         }
@@ -49,6 +48,24 @@
             padding: 20px 50px;
             box-sizing: border-box;
             z-index: 100;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .corner-logo {
+            height: 50px;
+            width: auto;
+            filter: drop-shadow(0 0 10px rgba(226, 194, 117, 0.5));
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .corner-logo:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 15px rgba(226, 194, 117, 0.8));
         }
 
         .logo-text {
@@ -68,23 +85,44 @@
             text-decoration: none;
             font-size: 0.9rem;
             font-weight: 500;
-            transition: color 0.3s;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 5px 0;
         }
 
-        .nav-links a:hover { color: var(--gold); }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gold);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--gold);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
 
         .book-btn {
             background: var(--teal);
             color: #000 !important;
-            padding: 8px 20px;
-            border-radius: 20px;
+            padding: 10px 25px;
+            border-radius: 25px;
             font-weight: bold;
             transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(79, 217, 197, 0.3);
         }
 
         .book-btn:hover {
             background: var(--gold);
-            box-shadow: 0 0 15px rgba(226, 194, 117, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(226, 194, 117, 0.4);
         }
 
         /* --- Main Content --- */
@@ -97,13 +135,12 @@
             justify-content: center;
             min-height: 100vh;
             text-align: center;
-            padding: 20px;
-            /* Fade background behind text for readability */
+            padding: 100px 20px 20px;
             background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.6) 80%);
         }
 
         .buddha-logo {
-            width: 280px;
+            width: 250px;
             max-width: 80%;
             filter: drop-shadow(0 0 25px rgba(226, 194, 117, 0.3));
             margin-bottom: 10px;
@@ -116,16 +153,17 @@
         }
 
         h1.brand-name {
-            font-size: 3.5rem;
+            font-size: 3rem;
             margin: 0;
             letter-spacing: 4px;
             font-weight: 300;
             text-transform: uppercase;
             color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
         }
 
         .main-heading {
-            font-size: 3rem;
+            font-size: 2.5rem;
             margin-top: 20px;
             margin-bottom: 10px;
             font-weight: 600;
@@ -135,10 +173,11 @@
 
         .sub-text {
             color: var(--gold);
-            font-size: 1.1rem;
+            font-size: 1rem;
             margin-top: 15px;
             letter-spacing: 1px;
             margin-bottom: 40px;
+            max-width: 600px;
         }
 
         .btn-group {
@@ -153,12 +192,40 @@
             border-radius: 30px;
             text-decoration: none;
             font-weight: 600;
-            transition: 0.3s;
+            transition: all 0.3s ease;
             border: 1px solid var(--gold);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
         }
 
-        .btn-outline { color: var(--gold); background: transparent; }
-        .btn-outline:hover { background: var(--gold); color: #000; box-shadow: 0 0 20px rgba(226, 194, 117, 0.5); }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(226, 194, 117, 0.2), transparent);
+            transition: left 0.7s ease;
+            z-index: -1;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-outline { 
+            color: var(--gold); 
+            background: transparent; 
+        }
+        
+        .btn-outline:hover { 
+            background: var(--gold); 
+            color: #000; 
+            box-shadow: 0 0 30px rgba(226, 194, 117, 0.7);
+            transform: translateY(-3px);
+        }
 
         /* --- Falling Objects Styles --- */
         .leaf, .star {
@@ -167,13 +234,13 @@
             animation-name: fall;
             animation-timing-function: linear;
             animation-fill-mode: forwards;
+            z-index: 1;
         }
 
         /* Star Specifics - GLOWING */
         .star {
             background: #fff;
             border-radius: 50%;
-            /* Intense glow effect */
             box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.8), 0 0 20px 5px rgba(255, 255, 255, 0.4);
         }
 
@@ -200,26 +267,39 @@
             opacity: 0 !important;
         }
 
-        /* --- MAGIC TOUCH GLOW EFFECT --- */
+        /* --- CONTINUOUS TOUCH GLOW EFFECT --- */
         .touch-glow {
             position: fixed;
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
-            /* Gold/White radial gradient */
             background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(226, 194, 117, 0.6) 30%, transparent 70%);
             transform: translate(-50%, -50%) scale(0.5);
             pointer-events: none;
-            z-index: 9999; /* On top of everything */
-            animation: touchPulse 0.6s ease-out forwards;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .touch-glow.active {
+            opacity: 1;
+            animation: touchPulse 0.8s ease-out infinite;
         }
 
         @keyframes touchPulse {
-            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+            0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.7; }
+            100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
         }
 
-        /* --- Responsive Design (Mobile Support) --- */
+        /* --- Responsive Design --- */
+        @media (max-width: 1024px) {
+            h1.brand-name { font-size: 2.5rem; }
+            .main-heading { font-size: 2rem; }
+            .buddha-logo { width: 200px; }
+            .nav-links { gap: 20px; }
+        }
+
         @media (max-width: 768px) {
             nav {
                 padding: 15px 20px;
@@ -227,13 +307,28 @@
                 gap: 15px;
             }
             
+            .logo-container {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .corner-logo {
+                height: 40px;
+            }
+            
+            .logo-text {
+                font-size: 1.3rem;
+            }
+            
             .nav-links {
-                display: none; /* Hide full menu on mobile initially */
+                display: none;
                 flex-direction: column;
                 width: 100%;
                 background: rgba(5, 5, 5, 0.95);
                 padding: 20px;
                 border-radius: 10px;
+                margin-top: 10px;
+                gap: 15px;
             }
 
             .nav-links.mobile-visible {
@@ -245,17 +340,71 @@
                 background: none;
                 border: none;
                 color: white;
-                font-size: 1.5rem;
+                font-size: 1.8rem;
                 cursor: pointer;
-                position: absolute;
-                right: 20px;
-                top: 20px;
+                transition: color 0.3s ease;
             }
 
-            h1.brand-name { font-size: 2.5rem; letter-spacing: 2px; }
-            .main-heading { font-size: 2rem; margin-top: 10px; }
-            .buddha-logo { width: 200px; }
-            .sub-text { font-size: 1rem; padding: 0 10px; }
+            .nav-toggle:hover {
+                color: var(--gold);
+            }
+
+            h1.brand-name { 
+                font-size: 2rem; 
+                letter-spacing: 2px; 
+            }
+            
+            .main-heading { 
+                font-size: 1.5rem; 
+                margin-top: 10px; 
+            }
+            
+            .buddha-logo { 
+                width: 180px; 
+                margin-top: 20px;
+            }
+            
+            .sub-text { 
+                font-size: 0.9rem; 
+                padding: 0 10px; 
+                line-height: 1.4;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+            
+            .btn {
+                padding: 10px 30px;
+                width: 200px;
+                text-align: center;
+            }
+            
+            .book-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-section {
+                padding: 120px 15px 20px;
+            }
+            
+            h1.brand-name { font-size: 1.8rem; }
+            .main-heading { font-size: 1.3rem; }
+            .buddha-logo { width: 150px; }
+            .sub-text { font-size: 0.85rem; }
+            
+            .logo-text {
+                font-size: 1.1rem;
+            }
+            
+            .corner-logo {
+                height: 35px;
+            }
         }
 
         /* Desktop menu toggle button (hidden by default) */
@@ -267,7 +416,10 @@
 <body>
 
     <nav>
-        <div class="logo-text" style="color:var(--gold)">Enlightens<br><small style="color:#fff; font-weight:400; font-size: 0.8rem;">Rooftop Dining</small></div>
+        <div class="logo-container">
+            <img src="https://i.ibb.co/0jb7rcCK/logo-bodhi-resize-NGo-Rt3k-U.png" alt="Enlightens Logo" class="corner-logo">
+            <div class="logo-text" style="color:var(--gold)">Enlightens<br><small style="color:#fff; font-weight:400; font-size: 0.8rem;">Rooftop Dining</small></div>
+        </div>
         
         <button class="nav-toggle" id="navToggle">☰</button>
         
@@ -303,39 +455,41 @@
         /* --- JavaScript Logic --- */
 
         const container = document.getElementById('sky-container');
-        const colors = ['#4fd9c5', '#e2c275', '#ffffff']; // Teal, Gold, White
+        const colors = ['#4fd9c5', '#e2c275', '#ffffff'];
 
-        // Function to create falling elements (Stars or Leaves)
+        // Create continuous glow element
+        const continuousGlow = document.createElement('div');
+        continuousGlow.classList.add('touch-glow');
+        document.body.appendChild(continuousGlow);
+
+        let glowActive = false;
+
+        // Function to create falling elements
         function createFallingElement(type) {
             const el = document.createElement('div');
             
-            // Random positioning
             const leftPos = Math.random() * 100;
-            const duration = Math.random() * 8 + 6; // Between 6 and 14 seconds
+            const duration = Math.random() * 8 + 6;
             
             el.style.left = `${leftPos}vw`;
             el.style.animationDuration = `${duration}s`;
 
             if (type === 'star') {
                 el.classList.add('star');
-                // Stars are small
-                const size = Math.random() * 3 + 2; // 2px to 5px
+                const size = Math.random() * 3 + 2;
                 el.style.width = `${size}px`;
                 el.style.height = `${size}px`;
-                el.style.opacity = Math.random() * 0.7 + 0.3; // Random brightness
+                el.style.opacity = Math.random() * 0.7 + 0.3;
             } else {
                 el.classList.add('leaf');
-                // Leaves are larger
                 const size = Math.random() * 15 + 10;
                 el.style.width = `${size}px`;
                 el.style.height = `${size}px`;
                 
-                // SVG for Leaf
                 const color = colors[Math.floor(Math.random() * colors.length)];
                 el.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='${encodeURIComponent(color)}'%3E%3Cpath d='M17,8C8,10,5.9,16.17,3.82,21.34L5.71,22l1-2.3A4.49,4.49,0,0,0,8,20C19,20,22,3,22,3,21,5,14,5.25,9,6.25S2,11.5,2,13.5a6.22,6.22,0,0,0,1.75,3.75C7,8,17,8,17,8Z'/%3E%3C/svg%3E")`;
             }
 
-            // Interaction: Scatter element when hovered
             const scatter = () => {
                 el.classList.add('scatter');
                 setTimeout(() => { if(el.parentNode) el.remove(); }, 600);
@@ -344,47 +498,68 @@
 
             container.appendChild(el);
 
-            // Cleanup after animation ends
             setTimeout(() => {
                 if(el.parentNode) el.remove();
             }, duration * 1000);
         }
 
         // --- SPAWNING LOOPS ---
-        // Create stars frequently
         setInterval(() => createFallingElement('star'), 150);
-        // Create leaves less frequently
         setInterval(() => createFallingElement('leaf'), 600);
 
-
-        // --- MAGIC TOUCH GLOW LOGIC ---
-        function createTouchGlow(x, y) {
-            const glow = document.createElement('div');
-            glow.classList.add('touch-glow');
-            glow.style.left = `${x}px`;
-            glow.style.top = `${y}px`;
-            
-            document.body.appendChild(glow);
-
-            // Remove after animation (0.6s)
-            setTimeout(() => {
-                glow.remove();
-            }, 600);
+        // --- CONTINUOUS GLOW LOGIC ---
+        function updateGlowPosition(x, y) {
+            if (glowActive) {
+                continuousGlow.style.left = `${x}px`;
+                continuousGlow.style.top = `${y}px`;
+            }
         }
 
-        // Handle Mouse Click
+        // Handle Mouse Move
+        document.addEventListener('mousemove', (e) => {
+            updateGlowPosition(e.clientX, e.clientY);
+        });
+
+        // Handle Touch Move
+        document.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            updateGlowPosition(touch.clientX, touch.clientY);
+            e.preventDefault();
+        }, {passive: false});
+
+        // Activate glow on mouse/touch start
+        document.addEventListener('mousedown', () => {
+            glowActive = true;
+            continuousGlow.classList.add('active');
+        });
+
+        document.addEventListener('touchstart', (e) => {
+            glowActive = true;
+            continuousGlow.classList.add('active');
+            const touch = e.touches[0];
+            updateGlowPosition(touch.clientX, touch.clientY);
+        });
+
+        // Deactivate glow on mouse/touch end
+        document.addEventListener('mouseup', () => {
+            glowActive = false;
+            continuousGlow.classList.remove('active');
+        });
+
+        document.addEventListener('touchend', () => {
+            glowActive = false;
+            continuousGlow.classList.remove('active');
+        });
+
+        // Also create scatter effect on click/tap
         document.addEventListener('click', (e) => {
-            createTouchGlow(e.clientX, e.clientY);
             triggerScatter(e.clientX, e.clientY);
         });
 
-        // Handle Touch (Mobile)
         document.addEventListener('touchstart', (e) => {
-            // Get the first touch point
             const touch = e.touches[0];
-            createTouchGlow(touch.clientX, touch.clientY);
             triggerScatter(touch.clientX, touch.clientY);
-        }, {passive: true});
+        });
 
         // Helper: Also scatter nearby leaves when clicking/touching empty space
         function triggerScatter(x, y) {
@@ -392,7 +567,7 @@
             leaves.forEach(leaf => {
                 const rect = leaf.getBoundingClientRect();
                 const dist = Math.hypot(x - rect.left, y - rect.top);
-                if (dist < 150) { // Impact radius
+                if (dist < 150) {
                     leaf.classList.add('scatter');
                 }
             });
@@ -408,20 +583,34 @@
                 navLinks.classList.toggle('mobile-visible');
             });
             
-            // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (!navLinks.contains(e.target) && e.target !== navToggle) {
                     navLinks.classList.remove('mobile-visible');
                 }
             });
             
-            // Close menu when clicking a link
             navLinks.querySelectorAll('a').forEach(link => {
                 link.addEventListener('click', () => {
                     navLinks.classList.remove('mobile-visible');
                 });
             });
         }
+
+        // Add glowing effect to buttons on hover
+        const allButtons = document.querySelectorAll('.btn, .book-btn');
+        allButtons.forEach(button => {
+            button.addEventListener('mouseenter', () => {
+                button.style.boxShadow = '0 0 25px rgba(226, 194, 117, 0.8)';
+            });
+            
+            button.addEventListener('mouseleave', () => {
+                if (button.classList.contains('book-btn')) {
+                    button.style.boxShadow = '0 0 10px rgba(79, 217, 197, 0.3)';
+                } else {
+                    button.style.boxShadow = '';
+                }
+            });
+        });
 
     </script>
 </body>
