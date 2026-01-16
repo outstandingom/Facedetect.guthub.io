@@ -140,10 +140,10 @@
         }
 
         .buddha-logo {
-            width: 250px;
-            max-width: 80%;
+            width: 220px;
+            max-width: 70%;
             filter: drop-shadow(0 0 25px rgba(226, 194, 117, 0.3));
-            margin-bottom: 10px;
+            margin-bottom: 20px;
             animation: breathe 4s ease-in-out infinite;
         }
 
@@ -153,7 +153,7 @@
         }
 
         h1.brand-name {
-            font-size: 3rem;
+            font-size: 2.8rem;
             margin: 0;
             letter-spacing: 4px;
             font-weight: 300;
@@ -163,21 +163,22 @@
         }
 
         .main-heading {
-            font-size: 2.5rem;
-            margin-top: 20px;
-            margin-bottom: 10px;
+            font-size: 2.2rem;
+            margin: 20px 0 10px;
             font-weight: 600;
             max-width: 800px;
             line-height: 1.2;
+            padding: 0 20px;
         }
 
         .sub-text {
             color: var(--gold);
             font-size: 1rem;
-            margin-top: 15px;
-            letter-spacing: 1px;
-            margin-bottom: 40px;
+            margin: 15px 0 40px;
+            letter-spacing: 0.5px;
             max-width: 600px;
+            padding: 0 20px;
+            line-height: 1.6;
         }
 
         .btn-group {
@@ -185,10 +186,11 @@
             gap: 20px;
             flex-wrap: wrap;
             justify-content: center;
+            padding: 0 20px;
         }
 
         .btn {
-            padding: 12px 35px;
+            padding: 14px 35px;
             border-radius: 30px;
             text-decoration: none;
             font-weight: 600;
@@ -197,6 +199,7 @@
             position: relative;
             overflow: hidden;
             z-index: 1;
+            font-size: 1rem;
         }
 
         .btn::before {
@@ -267,49 +270,45 @@
             opacity: 0 !important;
         }
 
-        /* --- CONTINUOUS TOUCH GLOW EFFECT --- */
+        /* --- SINGLE CLICK GLOW EFFECT --- */
         .touch-glow {
             position: fixed;
-            width: 100px;
-            height: 100px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(226, 194, 117, 0.6) 30%, transparent 70%);
             transform: translate(-50%, -50%) scale(0.5);
             pointer-events: none;
             z-index: 9999;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-
-        .touch-glow.active {
-            opacity: 1;
-            animation: touchPulse 0.8s ease-out infinite;
+            animation: touchPulse 0.6s ease-out forwards;
         }
 
         @keyframes touchPulse {
-            0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
-            50% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.7; }
-            100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
         }
 
         /* --- Responsive Design --- */
         @media (max-width: 1024px) {
+            nav {
+                padding: 20px 30px;
+            }
+            
             h1.brand-name { font-size: 2.5rem; }
-            .main-heading { font-size: 2rem; }
-            .buddha-logo { width: 200px; }
+            .main-heading { font-size: 1.8rem; }
+            .buddha-logo { width: 180px; }
             .nav-links { gap: 20px; }
         }
 
         @media (max-width: 768px) {
             nav {
                 padding: 15px 20px;
-                flex-direction: column;
-                gap: 15px;
+                flex-direction: row;
+                align-items: center;
             }
             
             .logo-container {
-                width: 100%;
-                justify-content: space-between;
+                gap: 10px;
             }
             
             .corner-logo {
@@ -317,18 +316,26 @@
             }
             
             .logo-text {
-                font-size: 1.3rem;
+                font-size: 1.2rem;
+            }
+            
+            .logo-text small {
+                font-size: 0.7rem;
             }
             
             .nav-links {
                 display: none;
+                position: absolute;
+                top: 80px;
+                left: 0;
+                right: 0;
                 flex-direction: column;
-                width: 100%;
                 background: rgba(5, 5, 5, 0.95);
                 padding: 20px;
-                border-radius: 10px;
-                margin-top: 10px;
+                border-radius: 0 0 10px 10px;
                 gap: 15px;
+                text-align: center;
+                backdrop-filter: blur(10px);
             }
 
             .nav-links.mobile-visible {
@@ -343,60 +350,90 @@
                 font-size: 1.8rem;
                 cursor: pointer;
                 transition: color 0.3s ease;
+                padding: 5px;
             }
 
             .nav-toggle:hover {
                 color: var(--gold);
             }
 
+            .hero-section {
+                padding: 120px 15px 40px;
+            }
+            
             h1.brand-name { 
                 font-size: 2rem; 
                 letter-spacing: 2px; 
             }
             
             .main-heading { 
-                font-size: 1.5rem; 
-                margin-top: 10px; 
+                font-size: 1.4rem; 
+                margin: 15px 0 10px;
             }
             
             .buddha-logo { 
-                width: 180px; 
-                margin-top: 20px;
+                width: 160px; 
+                margin-bottom: 15px;
             }
             
             .sub-text { 
                 font-size: 0.9rem; 
-                padding: 0 10px; 
-                line-height: 1.4;
+                margin: 15px 0 30px;
+                padding: 0 15px;
             }
             
             .btn-group {
                 flex-direction: column;
                 align-items: center;
                 gap: 15px;
+                width: 100%;
+                max-width: 300px;
+                margin: 0 auto;
             }
             
             .btn {
-                padding: 10px 30px;
-                width: 200px;
-                text-align: center;
+                padding: 12px 30px;
+                width: 100%;
+                font-size: 0.95rem;
             }
             
             .book-btn {
                 padding: 10px 20px;
                 font-size: 0.9rem;
+                display: block;
+                margin: 0 auto;
             }
         }
 
         @media (max-width: 480px) {
-            .hero-section {
-                padding: 120px 15px 20px;
+            nav {
+                padding: 12px 15px;
             }
             
-            h1.brand-name { font-size: 1.8rem; }
-            .main-heading { font-size: 1.3rem; }
-            .buddha-logo { width: 150px; }
-            .sub-text { font-size: 0.85rem; }
+            .hero-section {
+                padding: 100px 10px 30px;
+            }
+            
+            h1.brand-name { 
+                font-size: 1.7rem; 
+                letter-spacing: 1px;
+            }
+            
+            .main-heading { 
+                font-size: 1.2rem; 
+                margin: 10px 0 5px;
+            }
+            
+            .buddha-logo { 
+                width: 140px; 
+                margin-bottom: 10px;
+            }
+            
+            .sub-text { 
+                font-size: 0.85rem; 
+                margin: 10px 0 25px;
+                padding: 0 10px;
+            }
             
             .logo-text {
                 font-size: 1.1rem;
@@ -404,6 +441,15 @@
             
             .corner-logo {
                 height: 35px;
+            }
+            
+            .btn {
+                padding: 12px 25px;
+                font-size: 0.9rem;
+            }
+            
+            .nav-links {
+                top: 70px;
             }
         }
 
@@ -443,7 +489,7 @@
         <h1 class="brand-name">Enlightens</h1>
         
         <h2 class="main-heading">Where Food Meets Serenity</h2>
-        <p class="sub-text">Premium Rooftop Restaurant • Banquet Hall • Event Destination</p>
+        <p class="sub-text">Premium Rooftop Restaurant · Banquet Hall · Event Destination</p>
 
         <div class="btn-group">
             <a href="#" class="btn btn-outline">Explore Menu</a>
@@ -456,13 +502,6 @@
 
         const container = document.getElementById('sky-container');
         const colors = ['#4fd9c5', '#e2c275', '#ffffff'];
-
-        // Create continuous glow element
-        const continuousGlow = document.createElement('div');
-        continuousGlow.classList.add('touch-glow');
-        document.body.appendChild(continuousGlow);
-
-        let glowActive = false;
 
         // Function to create falling elements
         function createFallingElement(type) {
@@ -507,59 +546,34 @@
         setInterval(() => createFallingElement('star'), 150);
         setInterval(() => createFallingElement('leaf'), 600);
 
-        // --- CONTINUOUS GLOW LOGIC ---
-        function updateGlowPosition(x, y) {
-            if (glowActive) {
-                continuousGlow.style.left = `${x}px`;
-                continuousGlow.style.top = `${y}px`;
-            }
+        // --- SINGLE CLICK GLOW LOGIC ---
+        function createTouchGlow(x, y) {
+            const glow = document.createElement('div');
+            glow.classList.add('touch-glow');
+            glow.style.left = `${x}px`;
+            glow.style.top = `${y}px`;
+            
+            document.body.appendChild(glow);
+
+            // Remove after animation (0.6s)
+            setTimeout(() => {
+                glow.remove();
+            }, 600);
         }
 
-        // Handle Mouse Move
-        document.addEventListener('mousemove', (e) => {
-            updateGlowPosition(e.clientX, e.clientY);
-        });
-
-        // Handle Touch Move
-        document.addEventListener('touchmove', (e) => {
-            const touch = e.touches[0];
-            updateGlowPosition(touch.clientX, touch.clientY);
-            e.preventDefault();
-        }, {passive: false});
-
-        // Activate glow on mouse/touch start
-        document.addEventListener('mousedown', () => {
-            glowActive = true;
-            continuousGlow.classList.add('active');
-        });
-
-        document.addEventListener('touchstart', (e) => {
-            glowActive = true;
-            continuousGlow.classList.add('active');
-            const touch = e.touches[0];
-            updateGlowPosition(touch.clientX, touch.clientY);
-        });
-
-        // Deactivate glow on mouse/touch end
-        document.addEventListener('mouseup', () => {
-            glowActive = false;
-            continuousGlow.classList.remove('active');
-        });
-
-        document.addEventListener('touchend', () => {
-            glowActive = false;
-            continuousGlow.classList.remove('active');
-        });
-
-        // Also create scatter effect on click/tap
+        // Handle Mouse Click
         document.addEventListener('click', (e) => {
+            createTouchGlow(e.clientX, e.clientY);
             triggerScatter(e.clientX, e.clientY);
         });
 
+        // Handle Touch (Mobile)
         document.addEventListener('touchstart', (e) => {
+            // Get the first touch point
             const touch = e.touches[0];
+            createTouchGlow(touch.clientX, touch.clientY);
             triggerScatter(touch.clientX, touch.clientY);
-        });
+        }, {passive: true});
 
         // Helper: Also scatter nearby leaves when clicking/touching empty space
         function triggerScatter(x, y) {
@@ -567,7 +581,7 @@
             leaves.forEach(leaf => {
                 const rect = leaf.getBoundingClientRect();
                 const dist = Math.hypot(x - rect.left, y - rect.top);
-                if (dist < 150) {
+                if (dist < 120) { // Slightly smaller impact radius
                     leaf.classList.add('scatter');
                 }
             });
@@ -609,6 +623,21 @@
                 } else {
                     button.style.boxShadow = '';
                 }
+            });
+            
+            // Touch support for mobile
+            button.addEventListener('touchstart', () => {
+                button.style.boxShadow = '0 0 25px rgba(226, 194, 117, 0.8)';
+            });
+            
+            button.addEventListener('touchend', () => {
+                setTimeout(() => {
+                    if (button.classList.contains('book-btn')) {
+                        button.style.boxShadow = '0 0 10px rgba(79, 217, 197, 0.3)';
+                    } else {
+                        button.style.boxShadow = '';
+                    }
+                }, 300);
             });
         });
 
