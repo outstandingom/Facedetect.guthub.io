@@ -2,85 +2,93 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emoji Crush</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Emoji Crush Mobile</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #222; /* Dark background to make emojis pop */
+            background-color: #222;
             color: white;
             margin: 0;
-            padding-top: 20px;
+            padding: 10px;
+            overflow: hidden; /* Prevent scrolling while playing */
+            touch-action: none; /* Disables double-tap zoom */
         }
 
-        h1 { margin-bottom: 10px; }
+        h1 { margin: 10px 0; font-size: 1.5rem; }
 
         .game-info {
             display: flex;
             justify-content: space-between;
-            width: 560px;
+            width: 100%;
+            max-width: 400px;
             margin-bottom: 10px;
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: bold;
         }
 
-        /* The Game Board */
+        /* The Game Board - Responsive */
         .grid {
-            width: 560px;
-            height: 560px;
             display: flex;
             flex-wrap: wrap;
             background-color: #444;
-            border-radius: 15px;
-            padding: 5px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border-radius: 10px;
+            padding: 4px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            /* Mobile Sizing Calculation */
+            width: 95vw; 
+            height: 95vw;
+            max-width: 400px;
+            max-height: 400px;
         }
 
         /* Individual Squares */
         .grid div {
-            height: 70px;
-            width: 70px;
+            /* Calculate size based on grid width (8x8) */
+            height: 12.5%; 
+            width: 12.5%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 45px;
+            font-size: 2rem; /* Big emojis */
             cursor: pointer;
             user-select: none;
-            transition: transform 0.2s;
+            box-sizing: border-box;
+            border: 2px solid transparent;
         }
 
-        .grid div:hover {
-            transform: scale(1.15);
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
+        /* Responsive text size for small phones */
+        @media (max-width: 350px) {
+            .grid div { font-size: 1.5rem; }
+        }
+
+        /* Visual Feedback when touching */
+        .grid div:active {
+            transform: scale(0.9);
         }
 
         /* --- VISUAL EFFECTS --- */
-        
-        /* Connected Mode Animation (Rainbow Border) */
+        body.connected-mode {
+            background: linear-gradient(270deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+            background-size: 400% 400%;
+            animation: rainbow 2s ease infinite;
+        }
+
         @keyframes rainbow { 
             0%{background-position:0% 50%}
             50%{background-position:100% 50%}
             100%{background-position:0% 50%}
         }
 
-        body.connected-mode {
-            background: linear-gradient(270deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
-            background-size: 400% 400%;
-            animation: rainbow 3s ease infinite;
-        }
-
         #status-msg {
-            height: 40px;
-            color: #ffd700; /* Gold text */
-            font-weight: bold;
-            font-size: 1.2rem;
+            color: #ffd700;
             text-shadow: 1px 1px 2px black;
+            font-size: 1rem;
+            min-height: 24px;
         }
-        
     </style>
 </head>
 <body>
@@ -103,18 +111,8 @@
             const squares = [];
             let score = 0;
 
-            // --- YOUR CUSTOM EMOJIS ---
-            // I selected a balanced set from your list so matches are possible.
-            const emojiSet = [
-                '🥳', 
-                '🥹', 
-                '😝', 
-                '😑', 
-                '🤤', 
-                '😱',
-                '🫡'  // This is the SPECIAL one
-            ];
-
+            // Custom Emoji Set
+            const emojiSet = ['🥳', '🥹', '😝', '😑', '🤤', '😱', '🫡'];
             const SPECIAL_EMOJI = '🫡'; 
 
             // Create Board
@@ -131,27 +129,37 @@
             }
             createBoard();
 
-            // Dragging Logic
+            // --- INPUT HANDLING (Touch & Mouse) ---
             let colorBeingDragged;
             let colorBeingReplaced;
             let squareIdBeingDragged;
             let squareIdBeingReplaced;
 
-            squares.forEach(square => square.addEventListener('dragstart', dragStart));
-            squares.forEach(square => square.addEventListener('dragend', dragEnd));
-            squares.forEach(square => square.addEventListener('dragover', dragOver));
-            squares.forEach(square => square.addEventListener('dragenter', dragEnter));
-            squares.forEach(square => square.addEventListener('dragleave', dragLeave));
-            squares.forEach(square => square.addEventListener('drop', dragDrop));
+            // Mouse Events (Desktop)
+            squares.forEach(square => {
+                square.addEventListener('dragstart', dragStart);
+                square.addEventListener('dragend', dragEnd);
+                square.addEventListener('dragover', e => e.preventDefault());
+                square.addEventListener('dragenter', e => e.preventDefault());
+                square.addEventListener('drop', dragDrop);
+            });
 
+            // Touch Events (Mobile)
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let touchStartID = 0;
+
+            squares.forEach(square => {
+                square.addEventListener('touchstart', handleTouchStart, {passive: false});
+                square.addEventListener('touchmove', handleTouchMove, {passive: false});
+                square.addEventListener('touchend', handleTouchEnd);
+            });
+
+            // --- MOUSE LOGIC ---
             function dragStart() {
                 colorBeingDragged = this.innerHTML;
                 squareIdBeingDragged = parseInt(this.id);
             }
-
-            function dragOver(e) { e.preventDefault(); }
-            function dragEnter(e) { e.preventDefault(); }
-            function dragLeave() { }
 
             function dragDrop() {
                 colorBeingReplaced = this.innerHTML;
@@ -160,8 +168,74 @@
                 squares[squareIdBeingDragged].innerHTML = colorBeingReplaced;
             }
 
+            // --- TOUCH LOGIC ---
+            function handleTouchStart(e) {
+                // e.preventDefault(); // Prevents scroll
+                touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
+                touchStartID = parseInt(this.id);
+                colorBeingDragged = this.innerHTML;
+                squareIdBeingDragged = touchStartID;
+            }
+
+            function handleTouchMove(e) {
+                e.preventDefault(); // Important: prevents screen scrolling while swiping
+            }
+
+            function handleTouchEnd(e) {
+                let touchEndX = e.changedTouches[0].screenX;
+                let touchEndY = e.changedTouches[0].screenY;
+                
+                let deltaX = touchEndX - touchStartX;
+                let deltaY = touchEndY - touchStartY;
+                
+                // Determine direction (Left, Right, Up, Down)
+                let moveDirection = "";
+                
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    // Horizontal movement
+                    if (Math.abs(deltaX) > 20) { // Threshold for swipe
+                        moveDirection = deltaX > 0 ? "RIGHT" : "LEFT";
+                    }
+                } else {
+                    // Vertical movement
+                    if (Math.abs(deltaY) > 20) {
+                        moveDirection = deltaY > 0 ? "DOWN" : "UP";
+                    }
+                }
+
+                if(moveDirection) {
+                    let targetID = -1;
+                    if(moveDirection === "RIGHT") targetID = squareIdBeingDragged + 1;
+                    if(moveDirection === "LEFT") targetID = squareIdBeingDragged - 1;
+                    if(moveDirection === "DOWN") targetID = squareIdBeingDragged + width;
+                    if(moveDirection === "UP") targetID = squareIdBeingDragged - width;
+
+                    // Check bounds
+                    const isRightEdge = (squareIdBeingDragged % width === width - 1);
+                    const isLeftEdge = (squareIdBeingDragged % width === 0);
+                    
+                    if (moveDirection === "RIGHT" && isRightEdge) targetID = -1;
+                    if (moveDirection === "LEFT" && isLeftEdge) targetID = -1;
+                    if (targetID < 0 || targetID > 63) targetID = -1;
+
+                    if(targetID !== -1) {
+                        squareIdBeingReplaced = targetID;
+                        colorBeingReplaced = squares[targetID].innerHTML;
+                        
+                        // Swap
+                        squares[targetID].innerHTML = colorBeingDragged;
+                        squares[squareIdBeingDragged].innerHTML = colorBeingReplaced;
+                        
+                        // Validate Move
+                        dragEnd(); 
+                    }
+                }
+            }
+
+            // --- COMMON LOGIC (Validate Move) ---
             function dragEnd() {
-                // Define valid moves (adjacent only)
+                // Define valid moves
                 let validMoves = [
                     squareIdBeingDragged - 1,
                     squareIdBeingDragged - width,
@@ -173,6 +247,7 @@
                 if (squareIdBeingReplaced && validMove) {
                     squareIdBeingReplaced = null;
                 } else if (squareIdBeingReplaced && !validMove) {
+                    // Invalid move, swap back
                     squares[squareIdBeingReplaced].innerHTML = colorBeingReplaced;
                     squares[squareIdBeingDragged].innerHTML = colorBeingDragged;
                 } else {
@@ -181,71 +256,54 @@
             }
 
             // --- CHECK FOR MATCHES ---
-            function checkForMatches() {
+            function checkMatches() {
                 // Check Rows
                 for (let i = 0; i < 64; i++) {
                     let rowOfThree = [i, i + 1, i + 2];
                     let decidedColor = squares[i].innerHTML;
                     const isBlank = squares[i].innerHTML === '';
 
-                    // Exclude last 2 columns from starting a match
                     if (i % width > width - 3) continue;
 
                     if (rowOfThree.every(index => squares[index].innerHTML === decidedColor && !isBlank)) {
-                        // Special Effect
-                        if (decidedColor === SPECIAL_EMOJI) {
-                            activateConnectedMode();
-                        }
-                        
+                        if (decidedColor === SPECIAL_EMOJI) activateConnectedMode();
                         score += 3;
                         scoreDisplay.innerHTML = score;
-                        rowOfThree.forEach(index => {
-                            squares[index].innerHTML = '';
-                        });
+                        rowOfThree.forEach(index => { squares[index].innerHTML = ''; });
                     }
                 }
 
                 // Check Columns
-                for (let i = 0; i < 47; i++) { // 47 is the limit for columns
+                for (let i = 0; i < 47; i++) {
                     let columnOfThree = [i, i + width, i + width * 2];
                     let decidedColor = squares[i].innerHTML;
                     const isBlank = squares[i].innerHTML === '';
 
                     if (columnOfThree.every(index => squares[index].innerHTML === decidedColor && !isBlank)) {
-                        // Special Effect
-                        if (decidedColor === SPECIAL_EMOJI) {
-                            activateConnectedMode();
-                        }
-
+                        if (decidedColor === SPECIAL_EMOJI) activateConnectedMode();
                         score += 3;
                         scoreDisplay.innerHTML = score;
-                        columnOfThree.forEach(index => {
-                            squares[index].innerHTML = '';
-                        });
+                        columnOfThree.forEach(index => { squares[index].innerHTML = ''; });
                     }
                 }
             }
 
             function activateConnectedMode() {
-                if(document.body.classList.contains('connected-mode')) return; // Avoid double triggering
-                
-                statusMsg.innerText = "🇮🇳 CONNECTED MODE ON! 🇮🇳";
+                if(document.body.classList.contains('connected-mode')) return;
+                statusMsg.innerText = "🇮🇳 MODE ON! 🇮🇳";
                 document.body.classList.add('connected-mode');
-                score += 100; // Bonus points
-                
+                score += 50;
                 setTimeout(() => {
                     statusMsg.innerText = "";
                     document.body.classList.remove('connected-mode');
-                }, 3000);
+                }, 2000);
             }
 
             function moveDown() {
-                for (let i = 0; i < 56; i++) { // 56 is last index that has a block below it
+                for (let i = 0; i < 56; i++) {
                     if (squares[i + width].innerHTML === '') {
                         squares[i + width].innerHTML = squares[i].innerHTML;
                         squares[i].innerHTML = '';
-                        
-                        // Refill Top Row
                         const firstRow = [0, 1, 2, 3, 4, 5, 6, 7];
                         const isFirstRow = firstRow.includes(i);
                         if (isFirstRow && squares[i].innerHTML === '') {
@@ -256,10 +314,9 @@
                 }
             }
 
-            // Game Loop
-            window.setInterval(function() {
+            setInterval(() => {
                 moveDown();
-                checkForMatches();
+                checkMatches();
             }, 100);
         });
     </script>
