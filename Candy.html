@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Match Game</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f2f5;
+        }
+
+        h1 { margin-top: 20px; color: #333; }
+
+        .game-info {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* The Game Board */
+        .grid {
+            width: 560px;
+            height: 560px;
+            display: flex;
+            flex-wrap: wrap;
+            background-color: #bbada0;
+            border-radius: 10px;
+            padding: 5px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        /* Individual Squares */
+        .grid div {
+            height: 70px;
+            width: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 45px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.2s;
+            border-radius: 5px;
+        }
+
+        .grid div:hover {
+            transform: scale(1.1);
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* "Connected Mode" Special Effect Styles */
+        body.connected-mode-active {
+            background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+        }
+
+        .grid div.special-match-anim {
+            animation: spin 1s ease-in-out;
+            background-color: gold;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.5); }
+            100% { transform: rotate(360deg) scale(0); }
+        }
+
+        #status-msg {
+            height: 30px;
+            color: #d9534f;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Emoji Match 3</h1>
+    
+    <div class="game-info">
+        <div>Score: <span id="score">0</span></div>
+    </div>
+    <div id="status-msg"></div>
+
+    <div class="grid"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const grid = document.querySelector('.grid');
+            const scoreDisplay = document.getElementById('score');
+            const statusMsg = document.getElementById('status-msg');
+            const width = 8;
+            const squares = [];
+            let score = 0;
+
+            // The Emojis. 
+            // 🧔‍♂️ represents the special character.
+            const candyColors = [
+                '🍎', 
+                '🍌', 
+                '🍇', 
+                '🥥', 
+                '🍊', 
+                '🧔‍♂️' 
+            ];
+            
+            const SPECIAL_EMOJI = '🧔‍♂️';
+
+            // Create Board
+            function createBoard() {
+                for (let i = 0; i < width * width; i++) {
+                    const square = document.createElement('div');
+                    square.setAttribute('draggable', true);
+                    square.setAttribute('id', i);
+                    let randomColor = Math.floor(Math.random() * candyColors.length);
+                    square.innerHTML = candyColors[randomColor];
+                    grid.appendChild(square);
+                    squares.push(square);
+                }
+            }
+            createBoard();
+
+            // Dragging Functionality
+            let colorBeingDragged;
+            let colorBeingReplaced;
+            let squareIdBeingDragged;
+            let squareIdBeingReplaced;
+
+            squares.forEach(square => square.addEventListener('dragstart', dragStart));
+            squares.forEach(square => square.addEventListener('dragend', dragEnd));
+            squares.forEach(square => square.addEventListener('dragover', dragOver));
+            squares.forEach(square => square.addEventListener('dragenter', dragEnter));
+            squares.forEach(square => square.addEventListener('dragleave', dragLeave));
+            squares.forEach(square => square.addEventListener('drop', dragDrop));
+
+            function dragStart() {
+                colorBeingDragged = this.innerHTML;
+                squareIdBeingDragged = parseInt(this.id);
+            }
+
+            function dragOver(e) { e.preventDefault(); }
+            function dragEnter(e) { e.preventDefault(); }
+            function dragLeave() { }
+
+            function dragDrop() {
+                colorBeingReplaced = this.innerHTML;
+                squareIdBeingReplaced = parseInt(this.id);
+                this.innerHTML = colorBeingDragged;
+                squares[squareIdBeingDragged].innerHTML = colorBeingReplaced;
+            }
+
+            function dragEnd() {
+                // Define valid moves (left, right, up, down)
+                let validMoves = [
+                    squareIdBeingDragged - 1,
+                    squareIdBeingDragged - width,
+                    squareIdBeingDragged + 1,
+                    squareIdBeingDragged + width
+                ];
+                
+                let validMove = validMoves.includes(squareIdBeingReplaced);
+
+                if (squareIdBeingReplaced && validMove) {
+                    squareIdBeingReplaced = null;
+                } else if (squareIdBeingReplaced && !validMove) {
+                    squares[squareIdBeingReplaced].innerHTML = colorBeingReplaced;
+                    squares[squareIdBeingDragged].innerHTML = colorBeingDragged;
+                } else {
+                    squares[squareIdBeingDragged].innerHTML = colorBeingDragged;
+                }
+            }
+
+            // --- CHECK FOR MATCHES ---
+
+            // Check Row
+            function checkRowForThree() {
+                for (let i = 0; i < 61; i++) {
+                    let rowOfThree = [i, i + 1, i + 2];
+                    let decidedColor = squares[i].innerHTML;
+                    const isBlank = squares[i].innerHTML === '';
+
+                    // Boundary check (prevent wrapping rows)
+                    const notValid = [6, 7, 14, 15, 22, 23, 30, 31, 38, 39, 46, 47, 54, 55];
+                    if (notValid.includes(i)) continue;
+
+                    if (rowOfThree.every(index => squares[index].innerHTML === decidedColor && !isBlank)) {
+                        
+                        // Check for Special "Modi" Connection
+                        if (decidedColor === SPECIAL_EMOJI) {
+                            activateConnectedMode();
+                        }
+
+                        score += 3;
+                        scoreDisplay.innerHTML = score;
+                        rowOfThree.forEach(index => {
+                            squares[index].innerHTML = '';
+                        });
+                    }
+                }
+            }
+
+            // Check Column
+            function checkColumnForThree() {
+                for (let i = 0; i < 47; i++) {
+                    let columnOfThree = [i, i + width, i + width * 2];
+                    let decidedColor = squares[i].innerHTML;
+                    const isBlank = squares[i].innerHTML === '';
+
+                    if (columnOfThree.every(index => squares[index].innerHTML === decidedColor && !isBlank)) {
+                        
+                        // Check for Special "Modi" Connection
+                        if (decidedColor === SPECIAL_EMOJI) {
+                            activateConnectedMode();
+                        }
+
+                        score += 3;
+                        scoreDisplay.innerHTML = score;
+                        columnOfThree.forEach(index => {
+                            squares[index].innerHTML = '';
+                        });
+                    }
+                }
+            }
+
+            // --- SPECIAL FEATURE: Connected Mode ---
+            function activateConnectedMode() {
+                statusMsg.innerText = "✨ CONNECTED MODE ACTIVATED! ✨";
+                document.body.classList.add('connected-mode-active');
+                
+                // Add bonus score
+                score += 50;
+                
+                // Reset effect after 2 seconds
+                setTimeout(() => {
+                    statusMsg.innerText = "";
+                    document.body.classList.remove('connected-mode-active');
+                }, 2000);
+            }
+
+            // Drop candies down
+            function moveDown() {
+                for (let i = 0; i < 55; i++) {
+                    if (squares[i + width].innerHTML === '') {
+                        squares[i + width].innerHTML = squares[i].innerHTML;
+                        squares[i].innerHTML = '';
+                        
+                        // Refill top row
+                        const firstRow = [0, 1, 2, 3, 4, 5, 6, 7];
+                        const isFirstRow = firstRow.includes(i);
+                        if (isFirstRow && squares[i].innerHTML === '') {
+                            let randomColor = Math.floor(Math.random() * candyColors.length);
+                            squares[i].innerHTML = candyColors[randomColor];
+                        }
+                    }
+                }
+            }
+
+            // Game Loop
+            window.setInterval(function() {
+                moveDown();
+                checkRowForThree();
+                checkColumnForThree();
+            }, 100);
+        });
+    </script>
+</body>
+</html>
