@@ -3,23 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emoji Match Game</title>
+    <title>Emoji Crush</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #f0f2f5;
+            background-color: #222; /* Dark background to make emojis pop */
+            color: white;
+            margin: 0;
+            padding-top: 20px;
         }
 
-        h1 { margin-top: 20px; color: #333; }
+        h1 { margin-bottom: 10px; }
 
         .game-info {
             display: flex;
-            gap: 20px;
+            justify-content: space-between;
+            width: 560px;
             margin-bottom: 10px;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             font-weight: bold;
         }
 
@@ -29,10 +33,10 @@
             height: 560px;
             display: flex;
             flex-wrap: wrap;
-            background-color: #bbada0;
-            border-radius: 10px;
+            background-color: #444;
+            border-radius: 15px;
             padding: 5px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
         /* Individual Squares */
@@ -46,45 +50,47 @@
             cursor: pointer;
             user-select: none;
             transition: transform 0.2s;
-            border-radius: 5px;
         }
 
         .grid div:hover {
-            transform: scale(1.1);
-            background-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.15);
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
         }
 
-        /* "Connected Mode" Special Effect Styles */
-        body.connected-mode-active {
-            background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+        /* --- VISUAL EFFECTS --- */
+        
+        /* Connected Mode Animation (Rainbow Border) */
+        @keyframes rainbow { 
+            0%{background-position:0% 50%}
+            50%{background-position:100% 50%}
+            100%{background-position:0% 50%}
         }
 
-        .grid div.special-match-anim {
-            animation: spin 1s ease-in-out;
-            background-color: gold;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(180deg) scale(1.5); }
-            100% { transform: rotate(360deg) scale(0); }
+        body.connected-mode {
+            background: linear-gradient(270deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+            background-size: 400% 400%;
+            animation: rainbow 3s ease infinite;
         }
 
         #status-msg {
-            height: 30px;
-            color: #d9534f;
+            height: 40px;
+            color: #ffd700; /* Gold text */
             font-weight: bold;
+            font-size: 1.2rem;
+            text-shadow: 1px 1px 2px black;
         }
+        
     </style>
 </head>
 <body>
 
-    <h1>Emoji Match 3</h1>
+    <h1>Emoji Crush 🥳</h1>
     
     <div class="game-info">
+        <div id="status-msg"></div>
         <div>Score: <span id="score">0</span></div>
     </div>
-    <div id="status-msg"></div>
 
     <div class="grid"></div>
 
@@ -97,18 +103,19 @@
             const squares = [];
             let score = 0;
 
-            // The Emojis. 
-            // 🧔‍♂️ represents the special character.
-            const candyColors = [
-                '🍎', 
-                '🍌', 
-                '🍇', 
-                '🥥', 
-                '🍊', 
-                '🧔‍♂️' 
+            // --- YOUR CUSTOM EMOJIS ---
+            // I selected a balanced set from your list so matches are possible.
+            const emojiSet = [
+                '🥳', 
+                '🥹', 
+                '😝', 
+                '😑', 
+                '🤤', 
+                '😱',
+                '🫡'  // This is the SPECIAL one
             ];
-            
-            const SPECIAL_EMOJI = '🧔‍♂️';
+
+            const SPECIAL_EMOJI = '🫡'; 
 
             // Create Board
             function createBoard() {
@@ -116,15 +123,15 @@
                     const square = document.createElement('div');
                     square.setAttribute('draggable', true);
                     square.setAttribute('id', i);
-                    let randomColor = Math.floor(Math.random() * candyColors.length);
-                    square.innerHTML = candyColors[randomColor];
+                    let randomEmoji = Math.floor(Math.random() * emojiSet.length);
+                    square.innerHTML = emojiSet[randomEmoji];
                     grid.appendChild(square);
                     squares.push(square);
                 }
             }
             createBoard();
 
-            // Dragging Functionality
+            // Dragging Logic
             let colorBeingDragged;
             let colorBeingReplaced;
             let squareIdBeingDragged;
@@ -154,14 +161,13 @@
             }
 
             function dragEnd() {
-                // Define valid moves (left, right, up, down)
+                // Define valid moves (adjacent only)
                 let validMoves = [
                     squareIdBeingDragged - 1,
                     squareIdBeingDragged - width,
                     squareIdBeingDragged + 1,
                     squareIdBeingDragged + width
                 ];
-                
                 let validMove = validMoves.includes(squareIdBeingReplaced);
 
                 if (squareIdBeingReplaced && validMove) {
@@ -175,25 +181,22 @@
             }
 
             // --- CHECK FOR MATCHES ---
-
-            // Check Row
-            function checkRowForThree() {
-                for (let i = 0; i < 61; i++) {
+            function checkForMatches() {
+                // Check Rows
+                for (let i = 0; i < 64; i++) {
                     let rowOfThree = [i, i + 1, i + 2];
                     let decidedColor = squares[i].innerHTML;
                     const isBlank = squares[i].innerHTML === '';
 
-                    // Boundary check (prevent wrapping rows)
-                    const notValid = [6, 7, 14, 15, 22, 23, 30, 31, 38, 39, 46, 47, 54, 55];
-                    if (notValid.includes(i)) continue;
+                    // Exclude last 2 columns from starting a match
+                    if (i % width > width - 3) continue;
 
                     if (rowOfThree.every(index => squares[index].innerHTML === decidedColor && !isBlank)) {
-                        
-                        // Check for Special "Modi" Connection
+                        // Special Effect
                         if (decidedColor === SPECIAL_EMOJI) {
                             activateConnectedMode();
                         }
-
+                        
                         score += 3;
                         scoreDisplay.innerHTML = score;
                         rowOfThree.forEach(index => {
@@ -201,18 +204,15 @@
                         });
                     }
                 }
-            }
 
-            // Check Column
-            function checkColumnForThree() {
-                for (let i = 0; i < 47; i++) {
+                // Check Columns
+                for (let i = 0; i < 47; i++) { // 47 is the limit for columns
                     let columnOfThree = [i, i + width, i + width * 2];
                     let decidedColor = squares[i].innerHTML;
                     const isBlank = squares[i].innerHTML === '';
 
                     if (columnOfThree.every(index => squares[index].innerHTML === decidedColor && !isBlank)) {
-                        
-                        // Check for Special "Modi" Connection
+                        // Special Effect
                         if (decidedColor === SPECIAL_EMOJI) {
                             activateConnectedMode();
                         }
@@ -226,34 +226,31 @@
                 }
             }
 
-            // --- SPECIAL FEATURE: Connected Mode ---
             function activateConnectedMode() {
-                statusMsg.innerText = "✨ CONNECTED MODE ACTIVATED! ✨";
-                document.body.classList.add('connected-mode-active');
+                if(document.body.classList.contains('connected-mode')) return; // Avoid double triggering
                 
-                // Add bonus score
-                score += 50;
+                statusMsg.innerText = "🇮🇳 CONNECTED MODE ON! 🇮🇳";
+                document.body.classList.add('connected-mode');
+                score += 100; // Bonus points
                 
-                // Reset effect after 2 seconds
                 setTimeout(() => {
                     statusMsg.innerText = "";
-                    document.body.classList.remove('connected-mode-active');
-                }, 2000);
+                    document.body.classList.remove('connected-mode');
+                }, 3000);
             }
 
-            // Drop candies down
             function moveDown() {
-                for (let i = 0; i < 55; i++) {
+                for (let i = 0; i < 56; i++) { // 56 is last index that has a block below it
                     if (squares[i + width].innerHTML === '') {
                         squares[i + width].innerHTML = squares[i].innerHTML;
                         squares[i].innerHTML = '';
                         
-                        // Refill top row
+                        // Refill Top Row
                         const firstRow = [0, 1, 2, 3, 4, 5, 6, 7];
                         const isFirstRow = firstRow.includes(i);
                         if (isFirstRow && squares[i].innerHTML === '') {
-                            let randomColor = Math.floor(Math.random() * candyColors.length);
-                            squares[i].innerHTML = candyColors[randomColor];
+                            let randomEmoji = Math.floor(Math.random() * emojiSet.length);
+                            squares[i].innerHTML = emojiSet[randomEmoji];
                         }
                     }
                 }
@@ -262,8 +259,7 @@
             // Game Loop
             window.setInterval(function() {
                 moveDown();
-                checkRowForThree();
-                checkColumnForThree();
+                checkForMatches();
             }, 100);
         });
     </script>
