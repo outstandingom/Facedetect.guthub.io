@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snow Snake Game</title>
+    <style>
+        body {
+            background-color: #0f172a; /* Dark night sky color */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            text-shadow: 0 0 10px #ffffff;
+        }
+
+        #gameContainer {
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            border: 4px solid #334155;
+            border-radius: 8px;
+        }
+
+        canvas {
+            display: block;
+            background-color: #1e293b;
+        }
+
+        #scoreBoard {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        #gameOverScreen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.85);
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            display: none; /* Hidden by default */
+        }
+
+        button {
+            background-color: #38bdf8;
+            border: none;
+            padding: 10px 20px;
+            color: #0f172a;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #7dd3fc;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Snow Snake ❄️</h1>
+    <div id="scoreBoard">Score: 0</div>
+
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <div id="gameOverScreen">
+            <h2>Game Over!</h2>
+            <p>You hit yourself!</p>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <button onclick="resetGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('scoreBoard');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const finalScoreElement = document.getElementById('finalScore');
+
+        // Game settings
+        const gridSize = 20; // Size of one square
+        const tileCount = canvas.width / gridSize;
+        let speed = 7; // Iterations per second
+
+        // The user's specific food list
+        const foodEmojis = [..."🎂🍼🧠🍆🍑👽👺💩💘🦾🧖☘️🪴🌋🦎🦖🦕🦎🐍🐕‍🦺🐏🐕🐀🐑🐀🐩🐁🐕🐘🦦🦛🐒🦌🦦🪰🥞🥯🥣🌭🥪🥣🍚🥨🍤🥨🍱🥖🧀🍚🥘🥣🍛🥝🥬🍈🥝🍈🫑🍞🥪"];
+
+        // Game variables
+        let score = 0;
+        let velocityX = 0;
+        let velocityY = 0;
+        let headX = 10;
+        let headY = 10;
+        let snakeParts = [];
+        let tailLength = 2;
+        
+        // Food variables
+        let foodX = 5;
+        let foodY = 5;
+        let currentFoodEmoji = "🍎";
+
+        let gameRunning = true;
+
+        // Start the game loop
+        function drawGame() {
+            if (!gameRunning) return;
+
+            changeSnakePosition();
+            
+            // Check for game over conditions
+            let result = isGameOver();
+            if (result) {
+                gameRunning = false;
+                showGameOver();
+                return;
+            }
+
+            clearScreen();
+            checkFoodCollision();
+            drawFood();
+            drawSnake();
+            
+            setTimeout(drawGame, 1000 / speed);
+        }
+
+        function isGameOver() {
+            let gameOver = false;
+
+            // 1. Did we start moving?
+            if (velocityX === 0 && velocityY === 0) return false;
+
+            // 2. Wall Collision (Standard rules: walls kill you)
+            if (headX < 0 || headX === tileCount || headY < 0 || headY === tileCount) {
+                gameOver = true;
+            }
+
+            // 3. Body Collision (The "touch body out" rule)
+            for (let i = 0; i < snakeParts.length; i++) {
+                let part = snakeParts[i];
+                if (part.x === headX && part.y === headY) {
+                    gameOver = true;
+                    break;
+                }
+            }
+
+            return gameOver;
+        }
+
+        function showGameOver() {
+            finalScoreElement.innerText = score;
+            gameOverScreen.style.display = "block";
+        }
+
+        function resetGame() {
+            score = 0;
+            scoreElement.innerText = "Score: " + score;
+            velocityX = 0;
+            velocityY = 0;
+            headX = 10;
+            headY = 10;
+            snakeParts = [];
+            tailLength = 2;
+            speed = 7;
+            gameRunning = true;
+            gameOverScreen.style.display = "none";
+            pickNewFood();
+            drawGame();
+        }
+
+        function clearScreen() {
+            ctx.fillStyle = '#1e293b'; // Background color
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function drawSnake() {
+            // Draw the snake parts (Body)
+            ctx.fillStyle = "white"; // Snow color
+            for (let i = 0; i < snakeParts.length; i++) {
+                let part = snakeParts[i];
+                
+                // Draw circle for snowball effect
+                ctx.beginPath();
+                ctx.arc(part.x * gridSize + gridSize/2, part.y * gridSize + gridSize/2, gridSize/2 - 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Add new head position to snake parts
+            snakeParts.push(new SnakePart(headX, headY)); 
+            
+            // Remove the oldest part of the tail if we are longer than tailLength
+            while (snakeParts.length > tailLength) {
+                snakeParts.shift(); 
+            }
+
+            // Draw the Head
+            ctx.fillStyle = "#e2e8f0"; // Slightly different white for head
+            ctx.beginPath();
+            ctx.arc(headX * gridSize + gridSize/2, headY * gridSize + gridSize/2, gridSize/2 - 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw eyes
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.arc(headX * gridSize + gridSize/2 - 4, headY * gridSize + gridSize/2 - 2, 2, 0, Math.PI * 2); // Left eye
+            ctx.arc(headX * gridSize + gridSize/2 + 4, headY * gridSize + gridSize/2 - 2, 2, 0, Math.PI * 2); // Right eye
+            ctx.fill();
+        }
+
+        function changeSnakePosition() {
+            headX = headX + velocityX;
+            headY = headY + velocityY;
+        }
+
+        function drawFood() {
+            ctx.font = "20px Arial";
+            // Center the emoji in the grid square
+            ctx.fillText(currentFoodEmoji, foodX * gridSize - 2, foodY * gridSize + gridSize - 2);
+        }
+
+        function checkFoodCollision() {
+            if (foodX === headX && foodY === headY) {
+                pickNewFood();
+                score++;
+                scoreElement.innerText = "Score: " + score;
+                tailLength++; // Size increases
+                
+                // Increase speed slightly every 5 points
+                if(score % 5 === 0) speed += 1;
+            }
+        }
+
+        function pickNewFood() {
+            // Random position
+            foodX = Math.floor(Math.random() * tileCount);
+            foodY = Math.floor(Math.random() * tileCount);
+            
+            // Random emoji from your list
+            const randomIndex = Math.floor(Math.random() * foodEmojis.length);
+            currentFoodEmoji = foodEmojis[randomIndex];
+
+            // Make sure food doesn't spawn on snake body
+            for (let part of snakeParts) {
+                if (part.x === foodX && part.y === foodY) {
+                    pickNewFood(); // Try again
+                }
+            }
+        }
+
+        class SnakePart {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+            }
+        }
+
+        // Controls
+        document.body.addEventListener('keydown', keyDown);
+
+        function keyDown(event) {
+            // Prevent scrolling with arrow keys
+            if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(event.code) > -1) {
+                event.preventDefault();
+            }
+
+            // Up
+            if (event.keyCode == 38) {
+                if (velocityY == 1) return; // Prevent reversing into self
+                velocityY = -1;
+                velocityX = 0;
+            }
+            // Down
+            if (event.keyCode == 40) {
+                if (velocityY == -1) return;
+                velocityY = 1;
+                velocityX = 0;
+            }
+            // Left
+            if (event.keyCode == 37) {
+                if (velocityX == 1) return;
+                velocityY = 0;
+                velocityX = -1;
+            }
+            // Right
+            if (event.keyCode == 39) {
+                if (velocityX == -1) return;
+                velocityY = 0;
+                velocityX = 1;
+            }
+        }
+
+        // Init
+        pickNewFood();
+        drawGame();
+
+    </script>
+</body>
+</html>
