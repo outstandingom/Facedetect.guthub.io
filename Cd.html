@@ -3,35 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Wedding Reveal</title>
+    <title>Wedding Invitation Reveal</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #050505; font-family: 'serif'; }
-        #content {
+        body { margin: 0; overflow: hidden; background: #111; font-family: 'Georgia', serif; }
+        #invitation {
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            color: #d4af37; /* Gold */
             text-align: center;
+            color: #555;
             z-index: -1;
+            width: 80%;
         }
-        .hint {
-            position: absolute;
-            bottom: 30px; width: 100%;
-            text-align: center; color: white;
-            letter-spacing: 2px; animate: pulse 2s infinite;
-        }
-        @keyframes pulse { 0% {opacity: 0.3} 50% {opacity: 1} 100% {opacity: 0.3} }
+        h1 { font-size: 3.5rem; margin: 0; color: #333; font-style: italic; }
+        p { letter-spacing: 3px; text-transform: uppercase; size: 0.9rem; }
     </style>
 </head>
 <body>
 
-    <div id="content">
-        <h1 style="font-size: 3rem;">A & B</h1>
-        <p style="font-size: 1.5rem;">The Grand Wedding</p>
-        <p>2026 . 12 . 25</p>
+    <div id="invitation">
+        <p>You are cordially invited to the wedding of</p>
+        <h1>Sam & Sofia</h1>
+        <hr style="width:50px; border: 1px solid #ddd; margin: 20px auto;">
+        <p>December 12th, 2027</p>
     </div>
-
-    <div class="hint">CLICK TO OPEN</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -47,95 +42,114 @@
         function init() {
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.set(0, 0, 10);
+            camera.position.z = 12;
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             document.body.appendChild(renderer.domElement);
 
-            // Cinematic Lighting
-            const ambient = new THREE.AmbientLight(0xffffff, 0.2);
+            // Lighting for Deep Shadows (The "Image" Look)
+            const light = new THREE.DirectionalLight(0xffffff, 1.2);
+            light.position.set(5, 5, 10);
+            scene.add(light);
+
+            const rimLight = new THREE.PointLight(0xffffff, 0.8);
+            rimLight.position.set(-5, -5, 2);
+            scene.add(rimLight);
+
+            const ambient = new THREE.AmbientLight(0xffffff, 0.3);
             scene.add(ambient);
 
-            const spotlight = new THREE.PointLight(0xffffff, 1.5);
-            spotlight.position.set(0, 5, 5);
-            scene.add(spotlight);
-
-            // Procedural Velvet Material (No Images!)
-            // We use a custom color logic to simulate fabric shadows
-            const curtainMat = new THREE.MeshStandardMaterial({
-                color: 0x990000,
-                roughness: 0.8,
-                metalness: 0.2,
+            // Material with strong shadows
+            const material = new THREE.MeshStandardMaterial({
+                color: 0xb30000,
+                roughness: 0.6,
+                metalness: 0.1,
                 side: THREE.DoubleSide
             });
 
-            // Create Curtain Geometry (High density for folds)
-            const geometry = new THREE.PlaneGeometry(6, 12, 64, 64);
-            
-            // Apply initial "folded" look via vertex math
-            applyFolds(geometry);
+            // High density geometry for smooth folding
+            const geometry = new THREE.PlaneGeometry(10, 16, 100, 100);
 
-            leftCurtain = new THREE.Mesh(geometry, curtainMat);
-            leftCurtain.position.x = -3;
+            leftCurtain = new THREE.Mesh(geometry, material);
+            leftCurtain.position.x = -5;
             scene.add(leftCurtain);
 
-            rightCurtain = new THREE.Mesh(geometry.clone(), curtainMat);
-            rightCurtain.position.x = 3;
+            rightCurtain = new THREE.Mesh(geometry.clone(), material);
+            rightCurtain.position.x = 5;
             scene.add(rightCurtain);
 
-            window.addEventListener('mousedown', openCurtains);
+            window.addEventListener('mousedown', toggleReveal);
             window.addEventListener('resize', onResize);
         }
 
-        function applyFolds(geo) {
-            const pos = geo.attributes.position;
-            for (let i = 0; i < pos.count; i++) {
-                let x = pos.getX(i);
-                let y = pos.getY(i);
-                // Create vertical "tube" folds using Sine
-                let fold = Math.sin(x * 5) * 0.2;
-                pos.setZ(i, fold);
-            }
-            pos.needsUpdate = true;
-            geo.computeVertexNormals();
-        }
-
-        function openCurtains() {
+        function toggleReveal() {
             if (isOpen) return;
             isOpen = true;
-            
-            document.querySelector('.hint').style.display = 'none';
 
-            // Animation 1: Move them to the side
-            gsap.to(leftCurtain.position, { x: -8, duration: 3, ease: "power2.inOut" });
-            gsap.to(rightCurtain.position, { x: 8, duration: 3, ease: "power2.inOut" });
+            // GSAP for the "Pulling" animation
+            const duration = 3.5;
+            const ease = "power2.inOut";
 
-            // Animation 2: Bunching effect (Scaling X while pulling Z)
-            gsap.to(leftCurtain.scale, { x: 0.3, duration: 3, ease: "power2.inOut" });
-            gsap.to(rightCurtain.scale, { x: 0.3, duration: 3, ease: "power2.inOut" });
+            // Move the whole meshes outward
+            gsap.to(leftCurtain.position, { x: -14, duration: duration, ease: ease });
+            gsap.to(rightCurtain.position, { x: 14, duration: duration, ease: ease });
+
+            // Animate a custom "pull" factor for the vertices
+            let pull = { value: 0 };
+            gsap.to(pull, {
+                value: 1,
+                duration: duration,
+                ease: ease,
+                onUpdate: () => updateFolds(pull.value)
+            });
+        }
+
+        function updateFolds(progress) {
+            [leftCurtain, rightCurtain].forEach((mesh, index) => {
+                const pos = mesh.geometry.attributes.position;
+                const side = index === 0 ? 1 : -1;
+
+                for (let i = 0; i < pos.count; i++) {
+                    let x = pos.getX(i);
+                    let y = pos.getY(i);
+                    
+                    // 1. Initial Fold Density (The vertical lines)
+                    let fold = Math.sin(x * 4) * 0.3;
+
+                    // 2. The Pull Effect (Curving the fabric back)
+                    // The lower the Y (bottom of curtain), the more it gets pulled back (X)
+                    // We calculate "how much to pull" based on Y position (pinned at top Y=8)
+                    let pullStrength = Math.max(0, (8 - y) / 16);
+                    let pullX = progress * 8 * pullStrength * side;
+
+                    // Apply to geometry
+                    pos.setX(i, x + pullX);
+                    pos.setZ(i, fold + (progress * pullStrength * 3)); // Pulls depth too
+                }
+                pos.needsUpdate = true;
+                mesh.geometry.computeVertexNormals();
+            });
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            let t = clock.getElapsedTime();
+            let time = clock.getElapsedTime();
 
-            // Make the curtains "breathe" or sway slightly
-            [leftCurtain, rightCurtain].forEach((mesh, index) => {
-                const pos = mesh.geometry.attributes.position;
-                for (let i = 0; i < pos.count; i++) {
-                    let y = pos.getY(i);
-                    let x = pos.getX(i);
-                    // Wave movement
-                    let wave = Math.sin(y * 0.5 + t + (index * Math.PI)) * 0.05;
-                    // Only sway the bottom more than the top (pinned top)
-                    let influence = (6 - y) / 12; 
-                    pos.setZ(i, (Math.sin(x * 5) * 0.2) + (wave * influence));
-                }
-                pos.needsUpdate = true;
-            });
-
+            if (!isOpen) {
+                // Gentle sway before clicking
+                [leftCurtain, rightCurtain].forEach((mesh) => {
+                    const pos = mesh.geometry.attributes.position;
+                    for (let i = 0; i < pos.count; i++) {
+                        let x = pos.getX(i);
+                        let y = pos.getY(i);
+                        let wave = Math.sin(y * 0.3 + time) * 0.1;
+                        pos.setZ(i, (Math.sin(x * 4) * 0.3) + wave);
+                    }
+                    pos.needsUpdate = true;
+                });
+            }
             renderer.render(scene, camera);
         }
 
