@@ -3,28 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Wedding Reveal</title>
+    <title>Wedding Invitation</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #fff; font-family: 'Georgia', serif; }
-        #invitation-text {
+        body { margin: 0; overflow: hidden; background: #fffdf5; font-family: 'serif'; }
+        #invitation {
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
             z-index: -1;
-            width: 100%;
-            pointer-events: none;
         }
-        h1 { font-size: 3.5rem; color: #333; margin: 10px 0; font-style: italic; }
-        p { color: #888; letter-spacing: 5px; text-transform: uppercase; font-size: 0.8rem; }
+        h1 { font-size: 3.5rem; color: #333; font-style: italic; margin: 0; }
+        p { color: #999; letter-spacing: 5px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-    <div id="invitation-text">
-        <p>Save The Date</p>
+    <div id="invitation">
+        <p>You're Invited</p>
         <h1>Sam & Sofia</h1>
-        <p>December 12th, 2027</p>
+        <p>2027 . 12 . 25</p>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -39,111 +37,87 @@
 
         function init() {
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.z = 15;
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.z = 12;
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
             document.body.appendChild(renderer.domElement);
 
-            // Bright, consistent lighting to prevent color shifts
-            const ambient = new THREE.AmbientLight(0xffffff, 0.9);
-            scene.add(ambient);
-            const directional = new THREE.DirectionalLight(0xffffff, 0.5);
-            directional.position.set(0, 10, 10);
-            scene.add(directional);
+            // Lighting to keep that deep red velvet look
+            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+            const light = new THREE.DirectionalLight(0xffffff, 0.5);
+            light.position.set(5, 5, 10);
+            scene.add(light);
 
-            // Deep Red Velvet Material
             const material = new THREE.MeshStandardMaterial({
-                color: 0x9e0000,
-                roughness: 0.8,
+                color: 0xaa0000,
+                roughness: 0.9,
                 metalness: 0,
                 side: THREE.DoubleSide
             });
 
-            // High segment count for realistic curving
-            const geometry = new THREE.PlaneGeometry(12, 22, 120, 120);
+            // High resolution plane
+            const geometry = new THREE.PlaneGeometry(10, 18, 100, 100);
 
             leftCurtain = new THREE.Mesh(geometry, material);
-            leftCurtain.position.x = -6;
+            leftCurtain.position.x = -5;
             scene.add(leftCurtain);
 
             rightCurtain = new THREE.Mesh(geometry.clone(), material);
-            rightCurtain.position.x = 6;
+            rightCurtain.position.x = 5;
             scene.add(rightCurtain);
 
-            window.addEventListener('click', handleReveal);
-            window.addEventListener('resize', onResize);
+            window.addEventListener('click', openCurtains);
         }
 
-        function handleReveal() {
+        function openCurtains() {
             if (isOpen) return;
             isOpen = true;
 
-            const animation = { progress: 0 };
-            gsap.to(animation, {
+            let reveal = { progress: 0 };
+            gsap.to(reveal, {
                 progress: 1,
-                duration: 3.5,
+                duration: 3,
                 ease: "power2.inOut",
                 onUpdate: () => {
-                    updateCurtain(leftCurtain, animation.progress, 1);
-                    updateCurtain(rightCurtain, animation.progress, -1);
+                    deform(leftCurtain, reveal.progress, 1);
+                    deform(rightCurtain, reveal.progress, -1);
                 }
             });
         }
 
-        function updateCurtain(mesh, progress, direction) {
+        function deform(mesh, progress, side) {
             const pos = mesh.geometry.attributes.position;
-            
             for (let i = 0; i < pos.count; i++) {
-                // Initial Grid Coordinates
-                let xOrig = (i % 121) / 10 - 6; 
-                let yOrig = 11 - Math.floor(i / 121) / 10 * 1.83;
+                // Get original grid positions
+                let x = (i % 101) / 10 - 5;
+                let y = 9 - Math.floor(i / 101) / 5.55;
 
-                // FIX: "Pin" the top. Factor is 0 at top, 1 at bottom.
-                // This prevents the curtain from flying "up"
-                let verticalFactor = Math.max(0, (11 - yOrig) / 22);
+                // 1. ANCHOR: The top (y=9) stays fixed.
+                let pinTop = Math.max(0, (9 - y) / 18);
 
-                // THE SWOOP: vertices pull toward the side center
-                // direction is 1 for left curtain, -1 for right
-                let pullX = progress * 10 * verticalFactor * direction;
+                // 2. THE SWOOP: Pull center-side more than top/bottom
+                // This creates the "curved" rope look from your photo
+                let ropePull = Math.sin(pinTop * Math.PI); 
+                let moveX = progress * 8 * ropePull * side;
                 
-                // THE LIFT: simulating fabric bunching at the tie-back
-                let liftY = progress * 3 * Math.sin(verticalFactor * Math.PI);
+                // 3. THE BUNCH: Pull the bottom up slightly as it moves side
+                let moveY = progress * 4 * Math.pow(pinTop, 2);
 
-                // THE FOLDS: vertical ridges
-                let foldFreq = 3;
-                let z = Math.sin(xOrig * foldFreq) * (0.4 * (1 - progress));
+                // 4. FOLDS: Keep vertical lines deep
+                let z = Math.sin(x * 5) * 0.4 * (1 - progress * 0.5);
 
-                pos.setXY(i, xOrig + pullX, yOrig + liftY);
-                pos.setZ(i, z + (progress * verticalFactor * 2));
+                pos.setXY(i, x + moveX, y + moveY);
+                pos.setZ(i, z + (progress * ropePull * 2));
             }
-            
             pos.needsUpdate = true;
             mesh.geometry.computeVertexNormals();
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            if (!isOpen) {
-                let time = Date.now() * 0.002;
-                [leftCurtain, rightCurtain].forEach((m, idx) => {
-                    const p = m.geometry.attributes.position;
-                    for (let i = 0; i < p.count; i++) {
-                        let x = p.getX(i);
-                        p.setZ(i, Math.sin(x * 3 + time + idx) * 0.15);
-                    }
-                    p.needsUpdate = true;
-                });
-            }
             renderer.render(scene, camera);
-        }
-
-        function onResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
         }
     </script>
 </body>
