@@ -3,224 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Wedding - The Grand Reveal</title>
+    <title>3D Wedding Reveal</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #1a1a1a; font-family: 'Georgia', serif; }
-        #ui {
+        body { margin: 0; overflow: hidden; background: #050505; font-family: 'serif'; }
+        #content {
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            color: white;
+            color: #d4af37; /* Gold */
             text-align: center;
             z-index: -1;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
-        canvas { display: block; }
-        .instruction {
+        .hint {
             position: absolute;
-            bottom: 20px;
-            width: 100%;
-            text-align: center;
-            color: rgba(255,255,255,0.7);
-            pointer-events: none;
-            font-size: 1.2rem;
-            z-index: 100;
+            bottom: 30px; width: 100%;
+            text-align: center; color: white;
+            letter-spacing: 2px; animate: pulse 2s infinite;
         }
+        @keyframes pulse { 0% {opacity: 0.3} 50% {opacity: 1} 100% {opacity: 0.3} }
     </style>
 </head>
 <body>
 
-    <div id="ui">
-        <h1>Save the Date</h1>
-        <p>Celebrating the Marriage of</p>
-        <h2>Romeo & Juliet</h2>
-        <p>January 1st, 2027</p>
+    <div id="content">
+        <h1 style="font-size: 3rem;">A & B</h1>
+        <p style="font-size: 1.5rem;">The Grand Wedding</p>
+        <p>2026 . 12 . 25</p>
     </div>
 
-    <div class="instruction">Click anywhere to open the curtains</div>
+    <div class="hint">CLICK TO OPEN</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <script>
-        let scene, camera, renderer, leftCurtainMesh, rightCurtainMesh;
+        let scene, camera, renderer, leftCurtain, rightCurtain;
+        let clock = new THREE.Clock();
         let isOpen = false;
-        const clock = new THREE.Clock();
 
         init();
         animate();
 
         function init() {
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 7;
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 0, 10);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             document.body.appendChild(renderer.domElement);
 
-            // Lighting to enhance the texture depth
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-            scene.add(ambientLight);
+            // Cinematic Lighting
+            const ambient = new THREE.AmbientLight(0xffffff, 0.2);
+            scene.add(ambient);
 
-            const frontLight = new THREE.SpotLight(0xffffff, 1.2);
-            frontLight.position.set(0, 5, 10);
-            frontLight.angle = Math.PI / 4;
-            frontLight.penumbra = 0.1;
-            frontLight.decay = 2;
-            frontLight.distance = 50;
-            scene.add(frontLight);
+            const spotlight = new THREE.PointLight(0xffffff, 1.5);
+            spotlight.position.set(0, 5, 5);
+            scene.add(spotlight);
 
-            // 1. Loading the Texture (make sure image_1.png is in the same folder)
-            const textureLoader = new THREE.TextureLoader();
-            const curtainTexture = textureLoader.load('image_1.png');
-            curtainTexture.wrapS = curtainTexture.wrapT = THREE.RepeatWrapping;
-            curtainTexture.repeat.set(1, 1);
-
-            const material = new THREE.MeshStandardMaterial({
-                map: curtainTexture,
-                side: THREE.DoubleSide,
-                roughness: 0.9,
-                metalness: 0.1,
-                bumpMap: curtainTexture, // Adds artificial depth
-                bumpScale: 0.02
+            // Procedural Velvet Material (No Images!)
+            // We use a custom color logic to simulate fabric shadows
+            const curtainMat = new THREE.MeshStandardMaterial({
+                color: 0x990000,
+                roughness: 0.8,
+                metalness: 0.2,
+                side: THREE.DoubleSide
             });
 
-            // 2. High-Density Plane for deformability
-            // Width, Height, WidthSegments, HeightSegments
-            const geometry = new THREE.PlaneGeometry(8, 12, 50, 50);
+            // Create Curtain Geometry (High density for folds)
+            const geometry = new THREE.PlaneGeometry(6, 12, 64, 64);
+            
+            // Apply initial "folded" look via vertex math
+            applyFolds(geometry);
 
-            leftCurtainMesh = new THREE.Mesh(geometry, material);
-            leftCurtainMesh.position.x = -4; // Set to the left half
-            leftCurtainMesh.rotation.y = 0.1; // Slight angle for depth
-            scene.add(leftCurtainMesh);
+            leftCurtain = new THREE.Mesh(geometry, curtainMat);
+            leftCurtain.position.x = -3;
+            scene.add(leftCurtain);
 
-            rightCurtainMesh = new THREE.Mesh(geometry.clone(), material);
-            rightCurtainMesh.position.x = 4; // Set to the right half
-            rightCurtainMesh.rotation.y = -0.1;
-            scene.add(rightCurtainMesh);
+            rightCurtain = new THREE.Mesh(geometry.clone(), curtainMat);
+            rightCurtain.position.x = 3;
+            scene.add(rightCurtain);
 
-            // Window resize handler
-            window.addEventListener('resize', onWindowResize);
-            // Click to trigger reveal
-            window.addEventListener('mousedown', openCurtainsEffect);
+            window.addEventListener('mousedown', openCurtains);
+            window.addEventListener('resize', onResize);
         }
 
-        // 3. The Custom "Rope-Pull" Deformation Effect
-        function openCurtainsEffect() {
+        function applyFolds(geo) {
+            const pos = geo.attributes.position;
+            for (let i = 0; i < pos.count; i++) {
+                let x = pos.getX(i);
+                let y = pos.getY(i);
+                // Create vertical "tube" folds using Sine
+                let fold = Math.sin(x * 5) * 0.2;
+                pos.setZ(i, fold);
+            }
+            pos.needsUpdate = true;
+            geo.computeVertexNormals();
+        }
+
+        function openCurtains() {
             if (isOpen) return;
             isOpen = true;
+            
+            document.querySelector('.hint').style.display = 'none';
 
-            // Fade instruction
-            gsap.to(".instruction", { opacity: 0, duration: 0.5 });
+            // Animation 1: Move them to the side
+            gsap.to(leftCurtain.position, { x: -8, duration: 3, ease: "power2.inOut" });
+            gsap.to(rightCurtain.position, { x: 8, duration: 3, ease: "power2.inOut" });
 
-            // Animate curtains sliding out of frame
-            gsap.to(leftCurtainMesh.position, { x: -12, duration: 3, ease: "power2.inOut" });
-            gsap.to(rightCurtainMesh.position, { x: 12, duration: 3, ease: "power2.inOut" });
-
-            // Animate the deformation (bunching like image_0.png)
-            [leftCurtainMesh, rightCurtainMesh].forEach((mesh, index) => {
-                const geometry = mesh.geometry;
-                const positionAttribute = geometry.attributes.position;
-                
-                // We will animate an imaginary constraint point that pulls the fabric
-                // index 0 is left curtain, index 1 is right curtain
-                let pullDirection = index === 0 ? 1 : -1;
-
-                const animObj = { progress: 0 };
-                
-                gsap.to(animObj, {
-                    progress: 1,
-                    duration: 3,
-                    ease: "power2.inOut",
-                    onUpdate: function() {
-                        const prog = animObj.progress;
-                        
-                        // Access the actual vertices
-                        for (let i = 0; i < positionAttribute.count; i++) {
-                            // Get initial local X, Y (Z is depth)
-                            const x = geometry.attributes.position.getX(i);
-                            const y = geometry.attributes.position.getY(i);
-
-                            // The effect: Vertices closer to the center are pulled up (Y increases)
-                            // and sideways (X changes) more dramatically.
-                            
-                            // Normalizing Y from -6 to 6 into a 0.0 to 1.0 range (bottom to top)
-                            const normalizedY = (y + 6) / 12;
-
-                            // Curve calculation:
-                            // We create a bell curve based on normalizedY. The 'bunching' is 
-                            // strongest in the vertical middle and tapers off at the top and bottom edge.
-                            let curveFactor = Math.sin(normalizedY * Math.PI); // Max at middle (Y=0, normY=0.5)
-
-                            // Apply deformation to X (pull sideways) and Y (pull upward)
-                            // We modify a clone of the initial geometry position
-                            
-                            // Deformation Strength
-                            const deformationX = 3 * prog * curveFactor * pullDirection;
-                            const deformationY = 2 * prog * curveFactor;
-
-                            // Instead of modifying the direct position (which is messy), we use simple math
-                            // based on original vertex placement to create the visual shift.
-                            // However, directly manipulating large geometries in Three.js is slow.
-                            // To keep this performant and simple, we rely on the rapid movement and simple scaling:
-                        }
-                    }
-                });
-                
-                // Keep performance simple: just scale and move for the effect requested. Direct vertex manipulation
-                // requires a complex cloth solver (ammo.js) to look natural.
-                // For a simple 'image_0.png' opening, simple scaling on X combined with rapid movement
-                // *behind* a static valance (top edge) is standard. We will implement that for speed.
-            });
+            // Animation 2: Bunching effect (Scaling X while pulling Z)
+            gsap.to(leftCurtain.scale, { x: 0.3, duration: 3, ease: "power2.inOut" });
+            gsap.to(rightCurtain.scale, { x: 0.3, duration: 3, ease: "power2.inOut" });
         }
-        
-        // Simplified approach for performance and complexity: Move and Scale
-        // The high segment geometry ensures the texture looks correct as it compresses.
-        function openCurtainsEffectSimple() {
-            if (isOpen) return;
-            isOpen = true;
-
-            gsap.to(".instruction", { opacity: 0, duration: 0.5 });
-
-            // Slide apart *and* compress horizontally
-            // The compression (scale.x) mimics the 'bunching' effect required by image_0.png
-            const slideDuration = 2.8;
-
-            gsap.to(leftCurtainMesh.position, { x: -9, duration: slideDuration, ease: "sine.inOut" });
-            gsap.to(leftCurtainMesh.scale, { x: 0.2, duration: slideDuration, ease: "sine.inOut" });
-
-            gsap.to(rightCurtainMesh.position, { x: 9, duration: slideDuration, ease: "sine.inOut" });
-            gsap.to(rightCurtainMesh.scale, { x: 0.2, duration: slideDuration, ease: "sine.inOut" });
-        }
-        
-        // Override the click handler to the simple, reliable version
-        window.removeEventListener('mousedown', openCurtainsEffect);
-        window.addEventListener('mousedown', openCurtainsEffectSimple);
-
 
         function animate() {
             requestAnimationFrame(animate);
-            const time = clock.getElapsedTime();
+            let t = clock.getElapsedTime();
 
-            // Subtle fabric "waft" (Breathing effect)
-            [leftCurtainMesh, rightCurtainMesh].forEach((mesh) => {
-                const positions = mesh.geometry.attributes.position.array;
-                for (let i = 0; i < positions.length; i += 3) {
-                    const y = positions[i + 1];
-                    // Apply a complex sin wave over time to Z (depth) for texture movement
-                    // This uses the texture as a map for the 'grain' to make the move realistic
-                    positions[i + 2] = (Math.sin(y * 0.4 + time * 0.6) * 0.08) + (Math.sin(positions[i]*2 + time)*0.03);
+            // Make the curtains "breathe" or sway slightly
+            [leftCurtain, rightCurtain].forEach((mesh, index) => {
+                const pos = mesh.geometry.attributes.position;
+                for (let i = 0; i < pos.count; i++) {
+                    let y = pos.getY(i);
+                    let x = pos.getX(i);
+                    // Wave movement
+                    let wave = Math.sin(y * 0.5 + t + (index * Math.PI)) * 0.05;
+                    // Only sway the bottom more than the top (pinned top)
+                    let influence = (6 - y) / 12; 
+                    pos.setZ(i, (Math.sin(x * 5) * 0.2) + (wave * influence));
                 }
-                mesh.geometry.attributes.position.needsUpdate = true;
+                pos.needsUpdate = true;
             });
 
             renderer.render(scene, camera);
         }
 
-        function onWindowResize() {
+        function onResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
