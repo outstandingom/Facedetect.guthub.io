@@ -5,28 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wedding Invitation</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #fdfbf7; font-family: 'Georgia', serif; }
-        #invitation {
+        body { margin: 0; overflow: hidden; background: #fffdf9; font-family: 'Georgia', serif; }
+        #card {
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            width: 70%;
             z-index: -1;
-            opacity: 0; /* Starts hidden */
+            width: 100%;
         }
-        h1 { font-size: 3rem; color: #444; margin: 10px 0; font-style: italic; }
-        p { color: #888; letter-spacing: 2px; text-transform: uppercase; font-size: 0.8rem; }
-        canvas { display: block; cursor: pointer; }
+        h1 { font-size: 3rem; color: #333; margin: 0; font-style: italic; }
+        p { color: #666; letter-spacing: 4px; text-transform: uppercase; font-size: 0.7rem; }
     </style>
 </head>
 <body>
 
-    <div id="invitation">
-        <p>Save The Date</p>
+    <div id="card">
+        <p>The Wedding of</p>
         <h1>Sam & Sofia</h1>
-        <p>December 12, 2027</p>
-        <p style="margin-top: 20px; font-style: italic; text-transform: none;">We can't wait to celebrate with you</p>
+        <p>Save the Date | 2027</p>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -42,107 +39,105 @@
         function init() {
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.z = 12;
+            camera.position.z = 10;
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             document.body.appendChild(renderer.domElement);
 
-            // Lighting setup for high-contrast shadows
-            const light = new THREE.DirectionalLight(0xffffff, 1.2);
-            light.position.set(2, 5, 10);
-            scene.add(light);
-            scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+            // Studio Lighting (To keep red color consistent)
+            const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambient);
 
-            // Procedural Velvet Material
-            const material = new THREE.MeshStandardMaterial({
-                color: 0x9e0000,
-                roughness: 0.5,
-                metalness: 0.1,
+            const spot = new THREE.DirectionalLight(0xffffff, 0.8);
+            spot.position.set(0, 5, 10);
+            scene.add(spot);
+
+            // Realistic Velvet Material
+            // We use MeshStandardMaterial with high roughness for that "matte" look
+            const curtainMat = new THREE.MeshStandardMaterial({
+                color: 0xaa0000, // Deep Red
+                roughness: 1,
+                metalness: 0,
                 side: THREE.DoubleSide
             });
 
-            // High density geometry (120 segments for silk-like folds)
-            const geometry = new THREE.PlaneGeometry(10, 18, 120, 120);
+            // High-detail geometry (150 segments) for smooth "rope" curves
+            const geometry = new THREE.PlaneGeometry(8, 14, 150, 150);
 
-            leftCurtain = new THREE.Mesh(geometry, material);
-            leftCurtain.position.x = -5.05; // Tight center meeting
+            leftCurtain = new THREE.Mesh(geometry, curtainMat);
+            leftCurtain.position.x = -4;
             scene.add(leftCurtain);
 
-            rightCurtain = new THREE.Mesh(geometry.clone(), material);
-            rightCurtain.position.x = 5.05;
+            rightCurtain = new THREE.Mesh(geometry.clone(), curtainMat);
+            rightCurtain.position.x = 4;
             scene.add(rightCurtain);
 
-            window.addEventListener('mousedown', openCurtains);
+            window.addEventListener('click', openTheaterCurtains);
             window.addEventListener('resize', onResize);
         }
 
-        function openCurtains() {
+        function openTheaterCurtains() {
             if (isOpen) return;
             isOpen = true;
 
-            // Fade in the text behind
-            gsap.to("#invitation", { opacity: 1, duration: 2, delay: 0.5 });
+            const tl = gsap.timeline();
+            const progressObj = { value: 0 };
 
-            const duration = 3.0;
-            const revealProgress = { val: 0 };
-
-            gsap.to(revealProgress, {
-                val: 1,
-                duration: duration,
+            tl.to(progressObj, {
+                value: 1,
+                duration: 3,
                 ease: "power2.inOut",
                 onUpdate: () => {
-                    updateCurtainShape(leftCurtain, revealProgress.val, 1);
-                    updateCurtainShape(rightCurtain, revealProgress.val, -1);
+                    deformCurtain(leftCurtain, progressObj.value, 1);
+                    deformCurtain(rightCurtain, progressObj.value, -1);
                 }
             });
         }
 
-        function updateCurtainShape(mesh, progress, side) {
+        function deformCurtain(mesh, progress, side) {
             const pos = mesh.geometry.attributes.position;
             
             for (let i = 0; i < pos.count; i++) {
-                // Get original coordinates
-                let x = (i % 121) / 12 - 5; // Local X relative to mesh center
-                let y = 9 - Math.floor(i / 121) / 12 * 1.2; // Local Y
+                // Get the original coordinates of each "cloth" particle
+                let xOrig = (i % 151) / 18.75 - 4; 
+                let yOrig = 7 - Math.floor(i / 151) / 10.7;
 
-                // 1. The Folds (Vertical lines)
-                // We increase fold frequency as it gathers
-                let foldFreq = 4 + (progress * 8);
-                let foldDepth = 0.3 * (1 - progress * 0.5);
-                let z = Math.sin(x * foldFreq) * foldDepth;
+                // 1. PIN THE TOP: The higher the Y, the less it moves
+                let pinTop = Math.pow((7 - yOrig) / 14, 0.5);
 
-                // 2. The Pull-Back (Rope effect)
-                // Tie-back point is roughly at y = -2
-                let distanceToTie = Math.abs(y - (-2));
-                let pullStrength = Math.pow(Math.max(0, 1 - distanceToTie / 10), 2);
+                // 2. THE ROPE PULL: We pull from a point on the side (y = -1)
+                let distToRope = Math.abs(yOrig - (-1));
+                let ropeInfluence = Math.max(0, 1 - distToRope / 8);
                 
-                // Curve X: Bottom and Middle pull more than the top
-                let xOffset = progress * 7 * pullStrength * side;
+                // Horizontal shift (Swoop)
+                let moveX = progress * 6 * ropeInfluence * side * pinTop;
                 
-                // Slight Y lift to simulate fabric bunching up
-                let yOffset = progress * Math.pow(pullStrength, 2) * 1.5;
+                // Vertical lift (Fabric bunching)
+                let moveY = progress * 2 * ropeInfluence * pinTop;
 
-                pos.setXY(i, x + xOffset, y + yOffset);
-                pos.setZ(i, z + (progress * pullStrength * 2)); // Pushes folds forward
+                // 3. FOLD DENSITY: Add small zig-zags to simulate bunched fabric
+                let folds = Math.sin(xOrig * (10 + progress * 20)) * (0.2 * (1 - progress * 0.5));
+
+                pos.setXY(i, xOrig + moveX, yOrig + moveY);
+                pos.setZ(i, folds + (progress * ropeInfluence * 2));
             }
             
             pos.needsUpdate = true;
-            mesh.geometry.computeVertexNormals();
+            mesh.geometry.computeVertexNormals(); // Recalculate shadows for the new shape
         }
 
         function animate() {
             requestAnimationFrame(animate);
             if (!isOpen) {
-                // Pre-click subtle breathing
-                let time = Date.now() * 0.002;
-                [leftCurtain, rightCurtain].forEach((m, idx) => {
+                // Natural fabric "breathing"
+                let time = Date.now() * 0.001;
+                [leftCurtain, rightCurtain].forEach((m) => {
                     const p = m.geometry.attributes.position;
                     for (let i = 0; i < p.count; i++) {
                         let x = p.getX(i);
-                        let y = p.getY(i);
-                        p.setZ(i, Math.sin(x * 4 + time + idx) * 0.2);
+                        p.setZ(i, Math.sin(x * 5 + time) * 0.1);
                     }
                     p.needsUpdate = true;
                 });
@@ -158,4 +153,3 @@
     </script>
 </body>
 </html>
-
