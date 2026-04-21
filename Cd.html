@@ -3,29 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding Invitation Reveal</title>
+    <title>Wedding Invitation</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #111; font-family: 'Georgia', serif; }
+        body { margin: 0; overflow: hidden; background: #fdfbf7; font-family: 'Georgia', serif; }
         #invitation {
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            color: #555;
+            width: 70%;
             z-index: -1;
-            width: 80%;
+            opacity: 0; /* Starts hidden */
         }
-        h1 { font-size: 3.5rem; margin: 0; color: #333; font-style: italic; }
-        p { letter-spacing: 3px; text-transform: uppercase; size: 0.9rem; }
+        h1 { font-size: 3rem; color: #444; margin: 10px 0; font-style: italic; }
+        p { color: #888; letter-spacing: 2px; text-transform: uppercase; font-size: 0.8rem; }
+        canvas { display: block; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="invitation">
-        <p>You are cordially invited to the wedding of</p>
+        <p>Save The Date</p>
         <h1>Sam & Sofia</h1>
-        <hr style="width:50px; border: 1px solid #ddd; margin: 20px auto;">
-        <p>December 12th, 2027</p>
+        <p>December 12, 2027</p>
+        <p style="margin-top: 20px; font-style: italic; text-transform: none;">We can't wait to celebrate with you</p>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -33,7 +34,6 @@
 
     <script>
         let scene, camera, renderer, leftCurtain, rightCurtain;
-        let clock = new THREE.Clock();
         let isOpen = false;
 
         init();
@@ -49,105 +49,102 @@
             renderer.setPixelRatio(window.devicePixelRatio);
             document.body.appendChild(renderer.domElement);
 
-            // Lighting for Deep Shadows (The "Image" Look)
+            // Lighting setup for high-contrast shadows
             const light = new THREE.DirectionalLight(0xffffff, 1.2);
-            light.position.set(5, 5, 10);
+            light.position.set(2, 5, 10);
             scene.add(light);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 
-            const rimLight = new THREE.PointLight(0xffffff, 0.8);
-            rimLight.position.set(-5, -5, 2);
-            scene.add(rimLight);
-
-            const ambient = new THREE.AmbientLight(0xffffff, 0.3);
-            scene.add(ambient);
-
-            // Material with strong shadows
+            // Procedural Velvet Material
             const material = new THREE.MeshStandardMaterial({
-                color: 0xb30000,
-                roughness: 0.6,
+                color: 0x9e0000,
+                roughness: 0.5,
                 metalness: 0.1,
                 side: THREE.DoubleSide
             });
 
-            // High density geometry for smooth folding
-            const geometry = new THREE.PlaneGeometry(10, 16, 100, 100);
+            // High density geometry (120 segments for silk-like folds)
+            const geometry = new THREE.PlaneGeometry(10, 18, 120, 120);
 
             leftCurtain = new THREE.Mesh(geometry, material);
-            leftCurtain.position.x = -5;
+            leftCurtain.position.x = -5.05; // Tight center meeting
             scene.add(leftCurtain);
 
             rightCurtain = new THREE.Mesh(geometry.clone(), material);
-            rightCurtain.position.x = 5;
+            rightCurtain.position.x = 5.05;
             scene.add(rightCurtain);
 
-            window.addEventListener('mousedown', toggleReveal);
+            window.addEventListener('mousedown', openCurtains);
             window.addEventListener('resize', onResize);
         }
 
-        function toggleReveal() {
+        function openCurtains() {
             if (isOpen) return;
             isOpen = true;
 
-            // GSAP for the "Pulling" animation
-            const duration = 3.5;
-            const ease = "power2.inOut";
+            // Fade in the text behind
+            gsap.to("#invitation", { opacity: 1, duration: 2, delay: 0.5 });
 
-            // Move the whole meshes outward
-            gsap.to(leftCurtain.position, { x: -14, duration: duration, ease: ease });
-            gsap.to(rightCurtain.position, { x: 14, duration: duration, ease: ease });
+            const duration = 3.0;
+            const revealProgress = { val: 0 };
 
-            // Animate a custom "pull" factor for the vertices
-            let pull = { value: 0 };
-            gsap.to(pull, {
-                value: 1,
+            gsap.to(revealProgress, {
+                val: 1,
                 duration: duration,
-                ease: ease,
-                onUpdate: () => updateFolds(pull.value)
+                ease: "power2.inOut",
+                onUpdate: () => {
+                    updateCurtainShape(leftCurtain, revealProgress.val, 1);
+                    updateCurtainShape(rightCurtain, revealProgress.val, -1);
+                }
             });
         }
 
-        function updateFolds(progress) {
-            [leftCurtain, rightCurtain].forEach((mesh, index) => {
-                const pos = mesh.geometry.attributes.position;
-                const side = index === 0 ? 1 : -1;
+        function updateCurtainShape(mesh, progress, side) {
+            const pos = mesh.geometry.attributes.position;
+            
+            for (let i = 0; i < pos.count; i++) {
+                // Get original coordinates
+                let x = (i % 121) / 12 - 5; // Local X relative to mesh center
+                let y = 9 - Math.floor(i / 121) / 12 * 1.2; // Local Y
 
-                for (let i = 0; i < pos.count; i++) {
-                    let x = pos.getX(i);
-                    let y = pos.getY(i);
-                    
-                    // 1. Initial Fold Density (The vertical lines)
-                    let fold = Math.sin(x * 4) * 0.3;
+                // 1. The Folds (Vertical lines)
+                // We increase fold frequency as it gathers
+                let foldFreq = 4 + (progress * 8);
+                let foldDepth = 0.3 * (1 - progress * 0.5);
+                let z = Math.sin(x * foldFreq) * foldDepth;
 
-                    // 2. The Pull Effect (Curving the fabric back)
-                    // The lower the Y (bottom of curtain), the more it gets pulled back (X)
-                    // We calculate "how much to pull" based on Y position (pinned at top Y=8)
-                    let pullStrength = Math.max(0, (8 - y) / 16);
-                    let pullX = progress * 8 * pullStrength * side;
+                // 2. The Pull-Back (Rope effect)
+                // Tie-back point is roughly at y = -2
+                let distanceToTie = Math.abs(y - (-2));
+                let pullStrength = Math.pow(Math.max(0, 1 - distanceToTie / 10), 2);
+                
+                // Curve X: Bottom and Middle pull more than the top
+                let xOffset = progress * 7 * pullStrength * side;
+                
+                // Slight Y lift to simulate fabric bunching up
+                let yOffset = progress * Math.pow(pullStrength, 2) * 1.5;
 
-                    // Apply to geometry
-                    pos.setX(i, x + pullX);
-                    pos.setZ(i, fold + (progress * pullStrength * 3)); // Pulls depth too
-                }
-                pos.needsUpdate = true;
-                mesh.geometry.computeVertexNormals();
-            });
+                pos.setXY(i, x + xOffset, y + yOffset);
+                pos.setZ(i, z + (progress * pullStrength * 2)); // Pushes folds forward
+            }
+            
+            pos.needsUpdate = true;
+            mesh.geometry.computeVertexNormals();
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            let time = clock.getElapsedTime();
-
             if (!isOpen) {
-                // Gentle sway before clicking
-                [leftCurtain, rightCurtain].forEach((mesh) => {
-                    const pos = mesh.geometry.attributes.position;
-                    for (let i = 0; i < pos.count; i++) {
-                        let x = pos.getX(i);
-                        let y = pos.getY(i);
-                        let wave = Math.sin(y * 0.3 + time) * 0.1;
-                        pos.setZ(i, (Math.sin(x * 4) * 0.3) + wave);
+                // Pre-click subtle breathing
+                let time = Date.now() * 0.002;
+                [leftCurtain, rightCurtain].forEach((m, idx) => {
+                    const p = m.geometry.attributes.position;
+                    for (let i = 0; i < p.count; i++) {
+                        let x = p.getX(i);
+                        let y = p.getY(i);
+                        p.setZ(i, Math.sin(x * 4 + time + idx) * 0.2);
                     }
-                    pos.needsUpdate = true;
+                    p.needsUpdate = true;
                 });
             }
             renderer.render(scene, camera);
@@ -161,3 +158,4 @@
     </script>
 </body>
 </html>
+
