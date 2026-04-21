@@ -3,26 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding Invitation</title>
+    <title>Wedding Reveal</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #fffdf5; font-family: 'serif'; }
-        #invitation {
+        body { margin: 0; overflow: hidden; background: #fff; }
+        #text {
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
             z-index: -1;
+            font-family: 'Georgia', serif;
         }
-        h1 { font-size: 3.5rem; color: #333; font-style: italic; margin: 0; }
-        p { color: #999; letter-spacing: 5px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-    <div id="invitation">
-        <p>You're Invited</p>
-        <h1>Sam & Sofia</h1>
-        <p>2027 . 12 . 25</p>
+    <div id="text">
+        <p style="letter-spacing:5px; color:#888;">SAVE THE DATE</p>
+        <h1 style="font-size:3rem; font-style:italic;">Sam & Sofia</h1>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -38,78 +36,77 @@
         function init() {
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.z = 12;
+            camera.position.z = 15;
 
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
+            renderer.setClearColor(0xffffff, 1);
+            document.body.appendChild(renderer.domColor);
 
-            // Lighting to keep that deep red velvet look
-            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-            const light = new THREE.DirectionalLight(0xffffff, 0.5);
-            light.position.set(5, 5, 10);
-            scene.add(light);
+            const ambient = new THREE.AmbientLight(0xffffff, 1.2);
+            scene.add(ambient);
 
+            // Using a basic material first to ensure colors are solid red
             const material = new THREE.MeshStandardMaterial({
-                color: 0xaa0000,
-                roughness: 0.9,
-                metalness: 0,
+                color: 0xcc0000,
+                roughness: 1,
                 side: THREE.DoubleSide
             });
 
-            // High resolution plane
-            const geometry = new THREE.PlaneGeometry(10, 18, 100, 100);
+            // Geometry with high segments for smooth curves
+            const geometry = new THREE.PlaneGeometry(12, 24, 80, 80);
 
             leftCurtain = new THREE.Mesh(geometry, material);
-            leftCurtain.position.x = -5;
+            leftCurtain.position.set(-6, 0, 0);
             scene.add(leftCurtain);
 
             rightCurtain = new THREE.Mesh(geometry.clone(), material);
-            rightCurtain.position.x = 5;
+            rightCurtain.position.set(6, 0, 0);
             scene.add(rightCurtain);
 
-            window.addEventListener('click', openCurtains);
-        }
-
-        function openCurtains() {
-            if (isOpen) return;
-            isOpen = true;
-
-            let reveal = { progress: 0 };
-            gsap.to(reveal, {
-                progress: 1,
-                duration: 3,
-                ease: "power2.inOut",
-                onUpdate: () => {
-                    deform(leftCurtain, reveal.progress, 1);
-                    deform(rightCurtain, reveal.progress, -1);
+            window.addEventListener('click', () => {
+                if(!isOpen) {
+                    isOpen = true;
+                    reveal();
                 }
             });
         }
 
-        function deform(mesh, progress, side) {
+        function reveal() {
+            let ctrl = { p: 0 };
+            gsap.to(ctrl, {
+                p: 1,
+                duration: 3,
+                ease: "power2.inOut",
+                onUpdate: () => {
+                    updateCurtain(leftCurtain, ctrl.p, 1);
+                    updateCurtain(rightCurtain, ctrl.p, -1);
+                }
+            });
+        }
+
+        function updateCurtain(mesh, p, side) {
             const pos = mesh.geometry.attributes.position;
             for (let i = 0; i < pos.count; i++) {
-                // Get original grid positions
-                let x = (i % 101) / 10 - 5;
-                let y = 9 - Math.floor(i / 101) / 5.55;
+                // Original local coordinates
+                let x0 = (i % 81) / 80 * 12 - 6;
+                let y0 = 12 - Math.floor(i / 81) / 80 * 24;
 
-                // 1. ANCHOR: The top (y=9) stays fixed.
-                let pinTop = Math.max(0, (9 - y) / 18);
+                // 1. PIN THE TOP: y=12 is the top. (12-y0)/24 is 0 at top, 1 at bottom.
+                let pinFactor = (12 - y0) / 24;
 
-                // 2. THE SWOOP: Pull center-side more than top/bottom
-                // This creates the "curved" rope look from your photo
-                let ropePull = Math.sin(pinTop * Math.PI); 
-                let moveX = progress * 8 * ropePull * side;
+                // 2. THE SWOOP: Vertices pull more in the middle (using Sine)
+                let swoop = Math.sin(pinFactor * Math.PI);
+                let moveX = p * 10 * swoop * side;
                 
-                // 3. THE BUNCH: Pull the bottom up slightly as it moves side
-                let moveY = progress * 4 * Math.pow(pinTop, 2);
+                // 3. THE LIFT: Pull the fabric up as it moves sideways
+                let moveY = p * 5 * pinFactor;
 
-                // 4. FOLDS: Keep vertical lines deep
-                let z = Math.sin(x * 5) * 0.4 * (1 - progress * 0.5);
+                // 4. THE FOLDS: Constant vertical ridges
+                let fold = Math.sin(x0 * 4) * 0.5 * (1 - p);
 
-                pos.setXY(i, x + moveX, y + moveY);
-                pos.setZ(i, z + (progress * ropePull * 2));
+                pos.setXY(i, x0 + moveX, y0 + moveY);
+                pos.setZ(i, fold + (p * swoop * 3));
             }
             pos.needsUpdate = true;
             mesh.geometry.computeVertexNormals();
