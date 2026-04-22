@@ -13,24 +13,19 @@
 <script>
   const video = document.getElementById("inviteVideo");
 
-  function playFullVideo() {
-    video.currentTime = 0; // start from beginning
-    video.play();
+  // Play ONLY when user taps the video
+  video.addEventListener("click", function () {
+    video.currentTime = 0;
+    video.play().catch(err => console.log(err));
+  }, { once: true });
 
-    // Ensure it keeps playing fully
-    video.onpause = () => {
-      if (!video.ended) {
-        video.play();
-      }
-    };
-  }
+  video.addEventListener("touchstart", function () {
+    video.currentTime = 0;
+    video.play().catch(err => console.log(err));
+  }, { once: true });
 
-  // Works for both mobile + desktop
-  document.addEventListener("click", playFullVideo, { once: true });
-  document.addEventListener("touchstart", playFullVideo, { once: true });
-
-  // Stop exactly at last frame
-  video.addEventListener("ended", () => {
+  // Stop at last frame
+  video.addEventListener("ended", function () {
     video.pause();
     video.currentTime = video.duration;
   });
