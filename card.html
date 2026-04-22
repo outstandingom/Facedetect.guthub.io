@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Wedding Invite</title>
 </head>
-<body>
+<body style="margin:0">
 
 <video id="inviteVideo" width="100%" playsinline preload="auto">
   <source src="VID-20260422-WA0010.mp4" type="video/mp4">
@@ -13,19 +13,25 @@
 <script>
   const video = document.getElementById("inviteVideo");
 
-  // Play ONLY when user taps the video
-  video.addEventListener("click", function () {
-    video.currentTime = 0;
-    video.play().catch(err => console.log(err));
-  }, { once: true });
+  // Prepare video (important for smooth start)
+  video.muted = true;
+  video.load();
 
-  video.addEventListener("touchstart", function () {
-    video.currentTime = 0;
-    video.play().catch(err => console.log(err));
-  }, { once: true });
+  // Play ONLY on tap
+  function startVideo() {
+    video.muted = false;
+    video.play().then(() => {
+      // remove listeners after first play
+      document.removeEventListener("click", startVideo);
+      document.removeEventListener("touchstart", startVideo);
+    }).catch(err => console.log(err));
+  }
 
-  // Stop at last frame
-  video.addEventListener("ended", function () {
+  document.addEventListener("click", startVideo);
+  document.addEventListener("touchstart", startVideo);
+
+  // Freeze at last frame
+  video.addEventListener("ended", () => {
     video.pause();
     video.currentTime = video.duration;
   });
