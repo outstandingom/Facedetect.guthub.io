@@ -6,21 +6,24 @@
 </head>
 <body>
 
-<!-- Video -->
-<video id="inviteVideo" width="100%" playsinline>
+<video id="inviteVideo" width="100%" playsinline preload="auto">
   <source src="VID-20260422-WA0010.mp4" type="video/mp4">
 </video>
 
 <script>
   const video = document.getElementById("inviteVideo");
 
-  // Play video on first tap/click anywhere
-  document.addEventListener("click", function playVideoOnce() {
-    video.play();
-    document.removeEventListener("click", playVideoOnce);
-  });
+  function startVideo() {
+    video.play().catch(err => {
+      console.log("Play blocked:", err);
+    });
+  }
 
-  // Stop at last frame (do not reset)
+  // Use BOTH click + touch (important for mobile)
+  document.addEventListener("click", startVideo, { once: true });
+  document.addEventListener("touchstart", startVideo, { once: true });
+
+  // Stop at last frame
   video.addEventListener("ended", function () {
     video.pause();
     video.currentTime = video.duration;
