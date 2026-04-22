@@ -13,18 +13,24 @@
 <script>
   const video = document.getElementById("inviteVideo");
 
-  function startVideo() {
-    video.play().catch(err => {
-      console.log("Play blocked:", err);
-    });
+  function playFullVideo() {
+    video.currentTime = 0; // start from beginning
+    video.play();
+
+    // Ensure it keeps playing fully
+    video.onpause = () => {
+      if (!video.ended) {
+        video.play();
+      }
+    };
   }
 
-  // Use BOTH click + touch (important for mobile)
-  document.addEventListener("click", startVideo, { once: true });
-  document.addEventListener("touchstart", startVideo, { once: true });
+  // Works for both mobile + desktop
+  document.addEventListener("click", playFullVideo, { once: true });
+  document.addEventListener("touchstart", playFullVideo, { once: true });
 
-  // Stop at last frame
-  video.addEventListener("ended", function () {
+  // Stop exactly at last frame
+  video.addEventListener("ended", () => {
     video.pause();
     video.currentTime = video.duration;
   });
