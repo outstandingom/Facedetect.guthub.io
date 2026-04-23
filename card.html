@@ -1,29 +1,40 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
-</head>
-<body style="margin:0; overflow:hidden;">
+<body style="margin:0">
 
-<!-- Curtains -->
-<div id="left" style="position:fixed; width:50%; height:100%; background:red; left:0;"></div>
-<div id="right" style="position:fixed; width:50%; height:100%; background:red; right:0;"></div>
+<!-- Video -->
+<video id="video" width="100%" playsinline>
+  <source src="VID-20260422-WA0010.mp4" type="video/mp4">
+</video>
 
-<!-- Content -->
-<div id="content" style="display:none; text-align:center; margin-top:50%;">
+<!-- Hidden Content -->
+<div id="content" style="display:none; text-align:center;">
+  <h3>WE'RE GETTING MARRIED</h3>
   <h1>Om & Partner</h1>
-  <p>October 19, 2026</p>
+  <p>Monday, October 19, 2026</p>
+  <p>Royal Theatre</p>
 </div>
 
 <script>
-  document.addEventListener("click", () => {
-    gsap.to("#left", { x: "-100%", duration: 2 });
-    gsap.to("#right", { x: "100%", duration: 2 });
+  const video = document.getElementById("video");
+  const content = document.getElementById("content");
 
-    setTimeout(() => {
-      document.getElementById("content").style.display = "block";
-    }, 2000);
-  }, { once: true });
+  // Play only on tap anywhere
+  function playVideo() {
+    video.play();
+    document.removeEventListener("click", playVideo);
+    document.removeEventListener("touchstart", playVideo);
+  }
+
+  document.addEventListener("click", playVideo);
+  document.addEventListener("touchstart", playVideo);
+
+  // After video ends
+  video.addEventListener("ended", () => {
+    video.pause();
+    video.currentTime = video.duration; // stay at last frame
+    content.style.display = "block";
+  });
 </script>
 
 </body>
