@@ -1,49 +1,29 @@
 <!DOCTYPE html>
 <html>
-<body style="margin:0">
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+</head>
+<body style="margin:0; overflow:hidden;">
 
-<!-- Video -->
-<video id="curtainVideo" width="100%" playsinline preload="auto">
-  <source src="VID-20260422-WA0010.mp4" type="video/mp4">
-</video>
+<!-- Curtains -->
+<div id="left" style="position:fixed; width:50%; height:100%; background:red; left:0;"></div>
+<div id="right" style="position:fixed; width:50%; height:100%; background:red; right:0;"></div>
 
-<!-- Hidden Content -->
-<div id="content" style="display:none; text-align:center;">
-  <h3>WE'RE GETTING MARRIED</h3>
+<!-- Content -->
+<div id="content" style="display:none; text-align:center; margin-top:50%;">
   <h1>Om & Partner</h1>
-  <p>Monday, October 19, 2026</p>
-  <p>Royal Theatre</p>
+  <p>October 19, 2026</p>
 </div>
 
 <script>
-  const video = document.getElementById("curtainVideo");
-  const content = document.getElementById("content");
+  document.addEventListener("click", () => {
+    gsap.to("#left", { x: "-100%", duration: 2 });
+    gsap.to("#right", { x: "100%", duration: 2 });
 
-  // IMPORTANT: make video ready
-  video.muted = true;   // required for smooth start
-  video.load();
-
-  function startVideo() {
-    video.muted = false; // unmute after click
-    video.play().then(() => {
-      console.log("Video started");
-    }).catch(err => {
-      console.log("Play error:", err);
-    });
-
-    // remove listeners after first click
-    window.removeEventListener("click", startVideo);
-    window.removeEventListener("touchstart", startVideo);
-  }
-
-  // Use window instead of document (more reliable)
-  window.addEventListener("click", startVideo);
-  window.addEventListener("touchstart", startVideo);
-
-  // Show content after video ends
-  video.addEventListener("ended", () => {
-    content.style.display = "block";
-  });
+    setTimeout(() => {
+      document.getElementById("content").style.display = "block";
+    }, 2000);
+  }, { once: true });
 </script>
 
 </body>
