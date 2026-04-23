@@ -1,38 +1,37 @@
+
+
 <!DOCTYPE html>
 <html>
 <body style="margin:0">
 
+<!-- Video -->
 <video id="video" width="100%" playsinline preload="auto">
   <source src="VID-20260422-WA0010.mp4" type="video/mp4">
 </video>
 
-<div id="content" style="display:none; text-align:center;">
-  <h3>WE'RE GETTING MARRIED</h3>
-  <h1>Om & Partner</h1>
-  <p>Monday, October 19, 2026</p>
-  <p>Royal Theatre</p>
-</div>
-
 <script>
   const video = document.getElementById("video");
-  const content = document.getElementById("content");
 
+  // Preload properly
+  video.muted = true;   // helps browser allow buffering
+  video.load();
+
+  // Play on first tap anywhere
   function start() {
-    video.currentTime = 0;
-    video.play().catch(err => console.log("Play error:", err));
+    video.muted = false;
+    video.play().catch(e => console.log(e));
 
-    video.removeEventListener("pointerdown", start);
-    video.removeEventListener("touchstart", start);
+    window.removeEventListener("click", start);
+    window.removeEventListener("touchstart", start);
   }
 
-  // Tap ON the video (most reliable)
-  video.addEventListener("pointerdown", start);
-  video.addEventListener("touchstart", start);
+  window.addEventListener("click", start);
+  window.addEventListener("touchstart", start);
 
+  // Stop at last frame
   video.addEventListener("ended", () => {
     video.pause();
     video.currentTime = video.duration;
-    content.style.display = "block";
   });
 </script>
 
