@@ -1,39 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Wedding Invite</title>
-</head>
+<html>
 <body style="margin:0">
 
-<video id="inviteVideo" width="100%" playsinline preload="auto">
+<!-- Curtain Video -->
+<video id="curtainVideo" width="100%" playsinline preload="auto">
   <source src="VID-20260422-WA0010.mp4" type="video/mp4">
 </video>
 
+<!-- Hidden Wedding Content -->
+<div id="content" style="display:none; text-align:center;">
+  <h3>WE'RE GETTING MARRIED</h3>
+  <h1>Om & Partner</h1>
+  <p>Monday, October 19, 2026</p>
+  <p>Royal Theatre</p>
+</div>
+
 <script>
-  const video = document.getElementById("inviteVideo");
+  const video = document.getElementById("curtainVideo");
+  const content = document.getElementById("content");
 
-  // Prepare video (important for smooth start)
-  video.muted = true;
-  video.load();
-
-  // Play ONLY on tap
-  function startVideo() {
-    video.muted = false;
-    video.play().then(() => {
-      // remove listeners after first play
-      document.removeEventListener("click", startVideo);
-      document.removeEventListener("touchstart", startVideo);
-    }).catch(err => console.log(err));
+  // Play on tap
+  function start() {
+    video.play();
+    document.removeEventListener("click", start);
+    document.removeEventListener("touchstart", start);
   }
 
-  document.addEventListener("click", startVideo);
-  document.addEventListener("touchstart", startVideo);
+  document.addEventListener("click", start);
+  document.addEventListener("touchstart", start);
 
-  // Freeze at last frame
+  // After video ends → show content
   video.addEventListener("ended", () => {
-    video.pause();
-    video.currentTime = video.duration;
+    content.style.display = "block";
   });
 </script>
 
