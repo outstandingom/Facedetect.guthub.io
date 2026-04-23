@@ -2,12 +2,10 @@
 <html>
 <body style="margin:0">
 
-<!-- Video -->
-<video id="video" width="100%" playsinline>
+<video id="video" width="100%" playsinline preload="auto">
   <source src="VID-20260422-WA0010.mp4" type="video/mp4">
 </video>
 
-<!-- Hidden Content -->
 <div id="content" style="display:none; text-align:center;">
   <h3>WE'RE GETTING MARRIED</h3>
   <h1>Om & Partner</h1>
@@ -19,20 +17,21 @@
   const video = document.getElementById("video");
   const content = document.getElementById("content");
 
-  // Play only on tap anywhere
-  function playVideo() {
-    video.play();
-    document.removeEventListener("click", playVideo);
-    document.removeEventListener("touchstart", playVideo);
+  function start() {
+    video.currentTime = 0;
+    video.play().catch(err => console.log("Play error:", err));
+
+    video.removeEventListener("pointerdown", start);
+    video.removeEventListener("touchstart", start);
   }
 
-  document.addEventListener("click", playVideo);
-  document.addEventListener("touchstart", playVideo);
+  // Tap ON the video (most reliable)
+  video.addEventListener("pointerdown", start);
+  video.addEventListener("touchstart", start);
 
-  // After video ends
   video.addEventListener("ended", () => {
     video.pause();
-    video.currentTime = video.duration; // stay at last frame
+    video.currentTime = video.duration;
     content.style.display = "block";
   });
 </script>
