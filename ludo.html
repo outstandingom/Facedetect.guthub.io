@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ludo - Choose Your Winner</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --surface: #16213e;
+            --text: #e0e0e0;
+            --gold: #ffd700;
+            --red: #e74c3c;
+            --green: #2ecc71;
+            --yellow: #f1c40f;
+            --blue: #3498db;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 25px 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            max-width: 700px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 2.2em;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+        }
+        .subtitle {
+            color: #aaa;
+            font-size: 0.9em;
+            margin-top: -12px;
+            letter-spacing: 1px;
+        }
+
+        .selector-section {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+        .selector-label {
+            color: #ccc;
+            font-weight: 600;
+            font-size: 1em;
+            letter-spacing: 1px;
+        }
+        .color-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            font-weight: 700;
+            font-size: 0.75em;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .color-btn:hover {
+            transform: translateY(-4px) scale(1.1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+        .color-btn.red {
+            background: #e74c3c;
+            border-color: #c0392b;
+        }
+        .color-btn.green {
+            background: #2ecc71;
+            border-color: #27ae60;
+        }
+        .color-btn.yellow {
+            background: #f39c12;
+            border-color: #d68910;
+            color: #333;
+            text-shadow: none;
+        }
+        .color-btn.blue {
+            background: #3498db;
+            border-color: #2980b9;
+        }
+        .color-btn.selected {
+            border-color: #fff !important;
+            box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.3), 0 8px 25px rgba(0, 0, 0, 0.5) !important;
+            transform: scale(1.15) !important;
+            animation: pulse-selected 1.5s infinite;
+        }
+        @keyframes pulse-selected {
+            0%,
+            100% {
+                box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.3), 0 8px 25px rgba(0, 0, 0, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 0 14px rgba(255, 255, 255, 0.1), 0 8px 30px rgba(0, 0, 0, 0.6);
+            }
+        }
+        .color-btn .crown {
+            position: absolute;
+            top: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.2em;
+            display: none;
+        }
+        .color-btn.selected .crown {
+            display: block;
+            animation: bounce-crown 0.6s infinite alternate;
+        }
+        @keyframes bounce-crown {
+            from {
+                transform: translateX(-50%) translateY(0);
+            }
+            to {
+                transform: translateX(-50%) translateY(-6px);
+            }
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            border: 3px solid #333;
+            background: #fdf6e3;
+            width: 100%;
+            max-width: 580px;
+            aspect-ratio: 1;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+        .btn {
+            padding: 12px 28px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1em;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .btn-roll {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: #fff;
+            font-size: 1.1em;
+            padding: 14px 35px;
+        }
+        .btn-roll:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(238, 90, 36, 0.5);
+        }
+        .btn-roll:active {
+            transform: scale(0.95);
+        }
+        .btn-roll:disabled {
+            background: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .btn-auto {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: #fff;
+        }
+        .btn-auto:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(108, 92, 231, 0.5);
+        }
+        .btn-auto.active {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            animation: pulse-btn 1s infinite;
+        }
+        @keyframes pulse-btn {
+            0%,
+            100% {
+                box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+            }
+            50% {
+                box-shadow: 0 4px 30px rgba(231, 76, 60, 0.8);
+            }
+        }
+        .btn-reset {
+            background: #444;
+            color: #fff;
+        }
+        .btn-reset:hover {
+            background: #555;
+            transform: translateY(-2px);
+        }
+
+        .speed-slider {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ccc;
+            font-size: 0.85em;
+        }
+        .speed-slider input {
+            width: 80px;
+            accent-color: #6c5ce7;
+        }
+
+        .info-bar {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            color: #ddd;
+            font-weight: 600;
+        }
+        .dice-display {
+            background: #fff;
+            color: #222;
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            font-weight: 900;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+            border: 3px solid #ddd;
+        }
+        .dice-display.rolling {
+            animation: dice-shake 0.15s infinite;
+            border-color: #ff6b6b;
+        }
+        @keyframes dice-shake {
+            0%,
+            100% {
+                transform: rotate(0deg);
+            }
+            25% {
+                transform: rotate(-15deg) scale(1.1);
+            }
+            75% {
+                transform: rotate(15deg) scale(1.1);
+            }
+        }
+        .dice-display.six {
+            border-color: #ffd700;
+            background: #fffbe6;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+        }
+        .current-player-indicator {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+        .turn-indicator {
+            color: #aaa;
+            font-size: 0.85em;
+        }
+
+        .winner-banner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: #1a1a2e;
+            color: #fff;
+            padding: 40px 50px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 100;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            border: 3px solid #ffd700;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .winner-banner.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .winner-banner h2 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .winner-banner .trophy {
+            font-size: 4em;
+        }
+        .winner-banner button {
+            margin-top: 15px;
+            padding: 10px 25px;
+            border-radius: 25px;
+            border: 2px solid #ffd700;
+            background: transparent;
+            color: #ffd700;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        .winner-banner button:hover {
+            background: #ffd700;
+            color: #1a1a2e;
+        }
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 99;
+            display: none;
+        }
+        .overlay.show {
+            display: block;
+        }
+
+        .message-log {
+            color: #aaa;
+            font-size: 0.8em;
+            text-align: center;
+            min-height: 22px;
+            transition: all 0.3s;
+        }
+        .message-log.highlight {
+            color: #ffd700;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+                gap: 12px;
+                border-radius: 16px;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+            .color-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 0.65em;
+            }
+            .btn {
+                padding: 10px 18px;
+                font-size: 0.8em;
+            }
+            .dice-display {
+                width: 45px;
+                height: 45px;
+                font-size: 1.5em;
+            }
+            .canvas-wrapper {
+                max-width: 95vw;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🎲 Ludo Master</h1>
+        <p class="subtitle">Choose the winning color below</p>
+
+        <!-- Color Selection -->
+        <div class="selector-section">
+            <span class="selector-label">Pick Winner:</span>
+            <button class="color-btn red" data-color="red" title="Red">
+                <span class="crown">👑</span>R
+            </button>
+            <button class="color-btn green" data-color="green" title="Green">
+                <span class="crown">👑</span>G
+            </button>
+            <button class="color-btn yellow" data-color="yellow" title="Yellow">
+                <span class="crown">👑</span>Y
+            </button>
+            <button class="color-btn blue" data-color="blue" title="Blue">
+                <span class="crown">👑</span>B
+            </button>
+        </div>
+
+        <!-- Board -->
+        <div class="canvas-wrapper">
+            <canvas id="ludoCanvas"></canvas>
+        </div>
+
+        <!-- Info Bar -->
+        <div class="info-bar">
+            <span class="turn-indicator">Turn:</span>
+            <span class="current-player-indicator" id="currentPlayerBadge" style="background:#e74c3c;color:#fff;">RED</span>
+            <span style="margin:0 8px;">|</span>
+            <span>Dice:</span>
+            <div class="dice-display" id="diceDisplay">?</div>
+        </div>
+
+        <!-- Message Log -->
+        <div class="message-log" id="messageLog">Select a color to begin!</div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button class="btn btn-roll" id="btnRoll" disabled>🎯 Roll Dice</button>
+            <button class="btn btn-auto" id="btnAuto">▶ Auto Play</button>
+            <button class="btn btn-reset" id="btnReset">🔄 Reset</button>
+        </div>
+        <div class="speed-slider">
+            <span>🐢 Slow</span>
+            <input type="range" id="speedSlider" min="1" max="10" value="5" title="Auto-play speed">
+            <span>🐇 Fast</span>
+        </div>
+    </div>
+
+    <!-- Winner Overlay -->
+    <div class="overlay" id="overlay"></div>
+    <div class="winner-banner" id="winnerBanner">
+        <div class="trophy">🏆</div>
+        <h2 id="winnerText">Red Wins!</h2>
+        <p id="winnerSubtext">As predicted! 🎉</p>
+        <button onclick="closeWinner()">Play Again</button>
+    </div>
+
+    <script>
+        (function() {
+            // ==================== DOM ELEMENTS ====================
+            const canvas = document.getElementById('ludoCanvas');
+            const ctx = canvas.getContext('2d');
+            const diceDisplay = document.getElementById('diceDisplay');
+            const messageLog = document.getElementById('messageLog');
+            const btnRoll = document.getElementById('btnRoll');
+            const btnAuto = document.getElementById('btnAuto');
+            const btnReset = document.getElementById('btnReset');
+            const speedSlider = document.getElementById('speedSlider');
+            const currentPlayerBadge = document.getElementById('currentPlayerBadge');
+            const winnerBanner = document.getElementById('winnerBanner');
+            const overlay = document.getElementById('overlay');
+            const winnerText = document.getElementById('winnerText');
+            const winnerSubtext = document.getElementById('winnerSubtext');
+
+            // ==================== CONSTANTS ====================
+            const BOARD_SIZE = 580;
+            const CELL_SIZE = 28;
+            const TOKEN_RADIUS = 10;
+            const COLORS = ['red', 'green', 'yellow', 'blue'];
+            const COLOR_HEX = {
+                red: '#e74c3c',
+                green: '#2ecc71',
+                yellow: '#f39c12',
+                blue: '#3498db'
+            };
+            const COLOR_LIGHT = {
+                red: '#fce4e4',
+                green: '#e4fce8',
+                yellow: '#fef9e7',
+                blue: '#e4f0fc'
+            };
+            const COLOR_DARK = {
+                red: '#c0392b',
+                green: '#27ae60',
+                yellow: '#d68910',
+                blue: '#2980b9'
+            };
+            const COLOR_NAMES = {
+                red: 'Red',
+                green: 'Green',
+                yellow: 'Yellow',
+                blue: 'Blue'
+            };
+
+            // ==================== GAME STATE ====================
+            let selectedWinner = 'red'; // default
+            let gameRunning = false;
+            let autoPlayActive = false;
+            let autoPlayTimeout = null;
+            let gameOver = false;
+            let currentPlayerIndex = 0; // 0=red, 1=green, 2=yellow, 3=blue
+            let diceValue = null;
+            let consecutiveSixes = 0;
+            let rollCount = 0;
+
+            // Player state: each has 4 tokens
+            // token: { inBase: bool, pathPosition: int (0-51 on main track, -1 if not on track),
+            //          homeSteps: int (0-6, 6=reached center/win), isHome: bool }
+            let players = {};
+
+            function createPlayerState() {
+                return {
+                    color: '',
+                    tokens: [
+                        { inBase: true, pathPosition: -1, homeSteps: 0, isHome: false },
+                        { inBase: true, pathPosition: -1, homeSteps: 0, isHome: false },
+                        { inBase: true, pathPosition: -1, homeSteps: 0, isHome: false },
+                        { inBase: true, pathPosition: -1, homeSteps: 0, isHome: false },
+                    ],
+                    finishedTokens: 0,
+                    entryIndex: 0, // where this player enters the main track
+                    homeEntryIndex: 0, // where this player leaves main track for home column
+                };
+            }
+
+            function initPlayers() {
+                players = {};
+                const colorOrder = ['red', 'green', 'yellow', 'blue'];
+                const entryPoints = { red: 0, green: 13, yellow: 26, blue: 39 };
+                colorOrder.forEach((color, idx) => {
+                    const p = createPlayerState();
+                    p.color = color;
+                    p.entryIndex = entryPoints[color];
+                    p.homeEntryIndex = (entryPoints[color] + 51) % 52;
+                    players[color] = p;
+                });
+            }
+
+            // ==================== PATH CALCULATION ====================
+            // The Ludo board path (52 main track positions) + home columns
+            let mainPathCoords = []; // [{x, y}, ...] 52 positions
+            let homeColumnCoords = {}; // { red: [{x,y}*6], green: [...], yellow: [...], blue: [...] }
+            let homeBaseCoords = {}; // center of each home base for displaying waiting tokens
+
+            function calculateBoardCoordinates() {
+                const cw = BOARD_SIZE;
+                const ch = BOARD_SIZE;
+                const cx = cw / 2;
+                const cy = ch / 2;
+
+                // Cross arm boundaries
+                const armHalfWidth = 105; // half of arm width (210 total)
+                const hBandTop = cy - armHalfWidth;
+                const hBandBottom = cy + armHalfWidth;
+                const vBandLeft = cx - armHalfWidth;
+                const vBandRight = cx + armHalfWidth;
+
+                // Corner home base centers
+                homeBaseCoords = {
+                    red: { x: vBandRight + (cw - vBandRight) / 2, y: hBandBottom + (ch - hBandBottom) / 2 },
+                    green: { x: vBandLeft / 2, y: hBandTop / 2 },
+                    yellow: { x: vBandRight + (cw - vBandRight) / 2, y: hBandTop / 2 },
+                    blue: { x: vBandLeft / 2, y: hBandBottom + (ch - hBandBottom) / 2 },
+                };
+
+                // Define the 52 main path positions
+                // The path traces the perimeter of the cross shape
+                // We go clockwise: starting from Red's entry (top of board, right side of top arm)
+                mainPathCoords = [];
+                const cellSpacing = CELL_SIZE + 2;
+
+                // Helper to add points along a line
+                function addLinePoints(x1, y1, x2, y2, count) {
+                    const points = [];
+                    for (let i = 0; i < count; i++) {
+                        const t = i / (count - 1);
+                        points.push({ x: x1 + (x2 - x1) * t, y: y1 + (y2 - y1) * t });
+                    }
+                    return points;
+                }
+
+                // The main path segments (clockwise, 52 cells total)
+                // I'll define key segments that trace the Ludo path
+                const margin = 20;
+                const pathOffset = 18; // distance from arm edge to path center
+
+                // Segment 1: Red's entry going down (right side of top arm) - 5 cells
+                let seg1 = addLinePoints(vBandRight + pathOffset, margin, vBandRight + pathOffset, hBandTop -
+                    pathOffset, 5);
+                // Segment 2: Across top of right arm going right - 5 cells
+                let seg2 = addLinePoints(vBandRight + pathOffset, hBandTop - pathOffset, cw - margin - pathOffset,
+                    hBandTop - pathOffset, 5);
+                // Segment 3: Down right side of right arm - 5 cells
+                let seg3 = addLinePoints(cw - margin - pathOffset, hBandTop - pathOffset, cw - margin - pathOffset,
+                    hBandBottom + pathOffset, 5);
+                // Segment 4: Right to left across bottom of right arm - 5 cells
+                let seg4 = addLinePoints(cw - margin - pathOffset, hBandBottom + pathOffset, vBandRight + pathOffset,
+                    hBandBottom + pathOffset, 5);
+                // Segment 5: Down right side of bottom arm - 5 cells
+                let seg5 = addLinePoints(vBandRight + pathOffset, hBandBottom + pathOffset, vBandRight + pathOffset,
+                    ch - margin, 5);
+                // Segment 6: Left across bottom - 5 cells
+                let seg6 = addLinePoints(vBandRight + pathOffset, ch - margin, vBandLeft - pathOffset, ch - margin, 6);
+                // Segment 7: Up left side of bottom arm - 5 cells
+                let seg7 = addLinePoints(vBandLeft - pathOffset, ch - margin, vBandLeft - pathOffset, hBandBottom +
+                    pathOffset, 5);
+                // Segment 8: Left across - 5 cells
+                let seg8 = addLinePoints(vBandLeft - pathOffset, hBandBottom + pathOffset, margin + pathOffset,
+                    hBandBottom + pathOffset, 5);
+                // Segment 9: Up - 5 cells
+                let seg9 = addLinePoints(margin + pathOffset, hBandBottom + pathOffset, margin + pathOffset, hBandTop -
+                    pathOffset, 5);
+                // Segment 10: Right across top of left arm - remaining
+                let seg10 = addLinePoints(margin + pathOffset, hBandTop - pathOffset, vBandLeft - pathOffset, hBandTop -
+                    pathOffset, 6);
+
+                // Combine all segments
+                let allPoints = [...seg1, ...seg2, ...seg3, ...seg4, ...seg5, ...seg6, ...seg7, ...seg8, ...seg9, ...
+                    seg10
+                ];
+
+                // Ensure exactly 52 points
+                if (allPoints.length >= 52) {
+                    // Take evenly spaced 52 points
+                    const result = [];
+                    for (let i = 0; i < 52; i++) {
+                        const idx = Math.floor(i * allPoints.length / 52);
+                        result.push(allPoints[Math.min(idx, allPoints.length - 1)]);
+                    }
+                    mainPathCoords = result;
+                } else {
+                    mainPathCoords = allPoints;
+                    while (mainPathCoords.length < 52) {
+                        mainPathCoords.push({ ...mainPathCoords[mainPathCoords.length - 1] });
+                    }
+                }
+
+                // Home columns (6 cells each, from home entry toward center)
+                homeColumnCoords = {};
+                const colorConfigs = {
+                    red: { startX: vBandRight + pathOffset, startY: hBandBottom + pathOffset, dx: 0, dy: -1 },
+                    green: { startX: vBandLeft - pathOffset, startY: hBandTop - pathOffset, dx: 1, dy: 0 },
+                    yellow: { startX: vBandRight + pathOffset, startY: hBandTop - pathOffset, dx: -1, dy: 0 },
+                    blue: { startX: vBandLeft - pathOffset, startY: hBandBottom + pathOffset, dx: 0, dy: 1 },
+                };
+
+                for (const [color, cfg] of Object.entries(colorConfigs)) {
+                    const cells = [];
+                    const stepSize = CELL_SIZE + 3;
+                    for (let i = 0; i < 6; i++) {
+                        cells.push({
+                            x: cfg.startX + cfg.dx * stepSize * (i + 1),
+                            y: cfg.startY + cfg.dy * stepSize * (i + 1),
+                        });
+                    }
+                    homeColumnCoords[color] = cells;
+                }
+            }
+
+            // ==================== DRAWING ====================
+            function drawBoard() {
+                const cw = BOARD_SIZE;
+                const ch = BOARD_SIZE;
+                ctx.clearRect(0, 0, cw, ch);
+
+                // Background
+                ctx.fillStyle = '#fdf6e3';
+                ctx.fillRect(0, 0, cw, ch);
+
+                const cx = cw / 2;
+                const cy = ch / 2;
+                const armHalfWidth = 105;
+
+                // Draw corner home bases
+                const corners = [
+                    { x: 0, y: 0, w: cx - armHalfWidth, h: cy - armHalfWidth, color: 'green' },
+                    { x: cx + armHalfWidth, y: 0, w: cx - armHalfWidth, h: cy - armHalfWidth, color: 'yellow' },
+                    { x: 0, y: cy + armHalfWidth, w: cx - armHalfWidth, h: cy - armHalfWidth, color: 'blue' },
+                    { x: cx + armHalfWidth, y: cy + armHalfWidth, w: cx - armHalfWidth, h: cy - armHalfWidth,
+                    color: 'red' },
+                ];
+
+                corners.forEach(corner => {
+                    ctx.fillStyle = COLOR_LIGHT[corner.color];
+                    ctx.fillRect(corner.x + 3, corner.y + 3, corner.w - 6, corner.h - 6);
+                    ctx.strokeStyle = COLOR_DARK[corner.color];
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(corner.x + 3, corner.y + 3, corner.w - 6, corner.h - 6);
+
+                    // Inner white area for tokens
+                    const innerMargin = 22;
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(corner.x + innerMargin, corner.y + innerMargin,
+                        corner.w - innerMargin * 2, corner.h - innerMargin * 2);
+                    ctx.strokeStyle = '#ddd';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(corner.x + innerMargin, corner.y + innerMargin,
+                        corner.w - innerMargin * 2, corner.h - innerMargin * 2);
+
+                    // Label
+                    ctx.fillStyle = COLOR_DARK[corner.color];
+                    ctx.font = 'bold 13px "Segoe UI", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(COLOR_NAMES[corner.color].toUpperCase(),
+                        corner.x + corner.w / 2, corner.y + corner.h / 2 + 30);
+                });
+
+                // Draw cross arms
+                const armAreas = [
+                    { x: cx - armHalfWidth, y: 0, w: armHalfWidth * 2, h: cy - armHalfWidth, color: 'red' },
+                    { x: cx + armHalfWidth, y: cy - armHalfWidth, w: cw - cx - armHalfWidth, h: armHalfWidth * 2,
+                        color: 'green' },
+                    { x: cx - armHalfWidth, y: cy + armHalfWidth, w: armHalfWidth * 2, h: cy - armHalfWidth,
+                        color: 'yellow' },
+                    { x: 0, y: cy - armHalfWidth, w: cx - armHalfWidth, h: armHalfWidth * 2, color: 'blue' },
+                ];
+
+                armAreas.forEach(area => {
+                    ctx.fillStyle = '#fefefe';
+                    ctx.fillRect(area.x + 2, area.y + 2, area.w - 4, area.h - 4);
+                    ctx.strokeStyle = '#e0d5c1';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(area.x + 2, area.y + 2, area.w - 4, area.h - 4);
+                });
+
+                // Draw center finishing area
+                const centerSize = 70;
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(cx - centerSize / 2, cy - centerSize / 2, centerSize, centerSize);
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(cx - centerSize / 2, cy - centerSize / 2, centerSize, centerSize);
+
+                // Draw small colored triangles in center
+                const triColors = ['#e74c3c', '#2ecc71', '#f39c12', '#3498db'];
+                const triSize = 25;
+                const triOffsets = [
+                    { dx: 0, dy: -triSize / 2 },
+                    { dx: triSize / 2, dy: 0 },
+                    { dx: 0, dy: triSize / 2 },
+                    { dx: -triSize / 2, dy: 0 },
+                ];
+                triColors.forEach((tc, i) => {
+                    ctx.fillStyle = tc;
+                    ctx.beginPath();
+                    const tx = cx + triOffsets[i].dx;
+                    const ty = cy + triOffsets[i].dy;
+                    ctx.arc(tx, ty, triSize / 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                ctx.fillStyle = '#ffd700';
+                ctx.beginPath();
+                ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 10px "Segoe UI", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('HOME', cx, cy + 3);
+
+                // Draw path cells on main track
+                mainPathCoords.forEach((pos, i) => {
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(pos.x - CELL_SIZE / 2, pos.y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
+                    ctx.strokeStyle = '#ccc';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(pos.x - CELL_SIZE / 2, pos.y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
+
+                    // Color some cells based on which arm they're in
+                    let cellColor = null;
+                    if (i >= 0 && i < 5) cellColor = 'red';
+                    else if (i >= 5 && i < 10) cellColor = 'red';
+                    else if (i >= 10 && i < 15) cellColor = 'green';
+                    else if (i >= 15 && i < 20) cellColor = 'green';
+                    else if (i >= 20 && i < 25) cellColor = 'yellow';
+                    else if (i >= 25 && i < 31) cellColor = 'yellow';
+                    else if (i >= 31 && i < 36) cellColor = 'blue';
+                    else if (i >= 36 && i < 41) cellColor = 'blue';
+                    else if (i >= 41 && i < 46) cellColor = 'red';
+                    else cellColor = 'green';
+
+                    if (cellColor && (i % 6 === 0 || i % 6 === 1)) {
+                        ctx.fillStyle = COLOR_LIGHT[cellColor];
+                        ctx.fillRect(pos.x - CELL_SIZE / 2 + 1, pos.y - CELL_SIZE / 2 + 1, CELL_SIZE - 2,
+                            CELL_SIZE - 2);
+                    }
+                });
+
+                // Draw home column cells
+                for (const [color, cells] of Object.entries(homeColumnCoords)) {
+                    cells.forEach((pos, i) => {
+                        ctx.fillStyle = COLOR_LIGHT[color];
+                        ctx.fillRect(pos.x - CELL_SIZE / 2, pos.y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
+                        ctx.strokeStyle = COLOR_DARK[color];
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(pos.x - CELL_SIZE / 2, pos.y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
+                        // Arrow toward center
+                        if (i === 5) {
+                            ctx.fillStyle = '#ffd700';
+                            ctx.beginPath();
+                            ctx.arc(pos.x, pos.y, 6, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    });
+                }
+
+                // Draw entry point markers
+                const entryMarkers = [
+                    { color: 'red', idx: 0 },
+                    { color: 'green', idx: 13 },
+                    { color: 'yellow', idx: 26 },
+                    { color: 'blue', idx: 39 },
+                ];
+                entryMarkers.forEach(marker => {
+                    const pos = mainPathCoords[marker.idx];
+                    if (pos) {
+                        ctx.strokeStyle = COLOR_DARK[marker.color];
+                        ctx.lineWidth = 3;
+                        ctx.strokeRect(pos.x - CELL_SIZE / 2 - 2, pos.y - CELL_SIZE / 2 - 2, CELL_SIZE + 4,
+                            CELL_SIZE + 4);
+                        ctx.fillStyle = COLOR_DARK[marker.color];
+                        ctx.font = 'bold 14px "Segoe UI", sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('▶', pos.x, pos.y + 5);
+                    }
+                });
+            }
+
+            function drawTokens() {
+                // Draw tokens for all players
+                for (const [color, player] of Object.entries(players)) {
+                    player.tokens.forEach((token, tIdx) => {
+                        let pos = null;
+
+                        if (token.isHome) {
+                            // Token reached center - draw near center
+                            const cx = BOARD_SIZE / 2;
+                            const cy = BOARD_SIZE / 2;
+                            const offsets = [
+                                { dx: -18, dy: -18 }, { dx: 18, dy: -18 },
+                                { dx: -18, dy: 18 }, { dx: 18, dy: 18 },
+                            ];
+                            const off = offsets[tIdx];
+                            pos = { x: cx + off.dx, y: cy + off.dy };
+                        } else if (token.inBase) {
+                            // Token in home base
+                            const hb = homeBaseCoords[color];
+                            const baseOffsets = [
+                                { dx: -22, dy: -22 }, { dx: 22, dy: -22 },
+                                { dx: -22, dy: 22 }, { dx: 22, dy: 22 },
+                            ];
+                            pos = { x: hb.x + baseOffsets[tIdx].dx, y: hb.y + baseOffsets[tIdx].dy };
+                        } else if (token.homeSteps > 0) {
+                            // Token in home column
+                            const hc = homeColumnCoords[color];
+                            if (hc && hc[token.homeSteps - 1]) {
+                                pos = hc[token.homeSteps - 1];
+                            }
+                        } else if (token.pathPosition >= 0 && token.pathPosition < 52) {
+                            // Token on main track
+                            pos = mainPathCoords[token.pathPosition];
+                        }
+
+                        if (pos) {
+                            // Draw token shadow
+                            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                            ctx.beginPath();
+                            ctx.arc(pos.x + 2, pos.y + 2, TOKEN_RADIUS, 0, Math.PI * 2);
+                            ctx.fill();
+
+                            // Draw token
+                            const gradient = ctx.createRadialGradient(pos.x - 2, pos.y - 3, TOKEN_RADIUS * 0.2,
+                                pos.x, pos.y, TOKEN_RADIUS);
+                            gradient.addColorStop(0, '#ffffff');
+                            gradient.addColorStop(0.5, COLOR_HEX[color]);
+                            gradient.addColorStop(1, COLOR_DARK[color]);
+                            ctx.fillStyle = gradient;
+                            ctx.beginPath();
+                            ctx.arc(pos.x, pos.y, TOKEN_RADIUS, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.strokeStyle = '#fff';
+                            ctx.lineWidth = 1.5;
+                            ctx.stroke();
+
+                            // Small dot in center
+                            ctx.fillStyle = '#fff';
+                            ctx.beginPath();
+                            ctx.arc(pos.x, pos.y, 3, 0, Math.PI * 2);
+                            ctx.fill();
+
+                            // Highlight if this token belongs to selected winner
+                            if (color === selectedWinner && !token.inBase && !token.isHome) {
+                                ctx.strokeStyle = '#ffd700';
+                                ctx.lineWidth = 2.5;
+                                ctx.setLineDash([3, 2]);
+                                ctx.beginPath();
+                                ctx.arc(pos.x, pos.y, TOKEN_RADIUS + 4, 0, Math.PI * 2);
+                                ctx.stroke();
+                                ctx.setLineDash([]);
+                            }
+                        }
+                    });
+                }
+            }
+
+            function renderBoard() {
+                drawBoard();
+                drawTokens();
+            }
+
+            // ==================== GAME LOGIC ====================
+            function getPlayerByColor(color) {
+                return players[color];
+            }
+
+            function getCurrentPlayer() {
+                const colorOrder = ['red', 'green', 'yellow', 'blue'];
+                return players[colorOrder[currentPlayerIndex]];
+            }
+
+            function getCurrentPlayerColor() {
+                const colorOrder = ['red', 'green', 'yellow', 'blue'];
+                return colorOrder[currentPlayerIndex];
+            }
+
+            function getMainTrackPosition(player, stepsFromEntry) {
+                // Player enters at entryIndex, travels clockwise
+                return (player.entryIndex + stepsFromEntry) % 52;
+            }
+
+            function getTokenDisplayPosition(token, player) {
+                if (token.inBase) return null;
+                if (token.isHome) return 'HOME';
+                if (token.homeSteps > 0) {
+                    return `HOME COLUMN: step ${token.homeSteps}/6`;
+                }
+                if (token.pathPosition >= 0) {
+                    return `Track pos: ${token.pathPosition}`;
+                }
+                return null;
+            }
+
+            function rollDice(forceSix = false, favorNumber = null) {
+                if (forceSix) return 6;
+                if (favorNumber && favorNumber >= 1 && favorNumber <= 6) {
+                    // 50% chance of getting the favored number, 50% random
+                    if (Math.random() < 0.5) return favorNumber;
+                }
+                return Math.floor(Math.random() * 6) + 1;
+            }
+
+            function getBiasedRoll(playerColor) {
+                if (playerColor === selectedWinner) {
+                    // Selected winner gets advantages
+                    const rand = Math.random();
+
+                    // Check if any token is in home column and needs specific numbers
+                    const player = getPlayerByColor(playerColor);
+                    let neededNumber = null;
+                    for (const token of player.tokens) {
+                        if (token.homeSteps > 0 && token.homeSteps < 6) {
+                            const remaining = 6 - token.homeSteps;
+                            if (remaining <= 6 && remaining >= 1) {
+                                neededNumber = remaining;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (neededNumber && Math.random() < 0.55) {
+                        return neededNumber;
+                    }
+
+                    // Higher chance of 6
+                    if (rand < 0.35) return 6;
+                    if (rand < 0.55) return 5;
+                    if (rand < 0.72) return 4;
+                    if (rand < 0.85) return 3;
+                    if (rand < 0.94) return 2;
+                    return 1;
+                } else {
+                    // Other players: slightly reduced 6 chance
+                    const rand = Math.random();
+                    if (rand < 0.10) return 6;
+                    if (rand < 0.28) return 5;
+                    if (rand < 0.46) return 4;
+                    if (rand < 0.64) return 3;
+                    if (rand < 0.82) return 2;
+                    return 1;
+                }
+            }
+
+            function getDiceValueForCurrentPlayer() {
+                const color = getCurrentPlayerColor();
+                return getBiasedRoll(color);
+            }
+
+            function canMoveAnyToken(player, diceVal) {
+                if (diceVal === 6) {
+                    // Can always bring a token out or move
+                    const hasTokenInBase = player.tokens.some(t => t.inBase);
+                    const hasTokenOnBoard = player.tokens.some(t => !t.inBase && !t.isHome && t.homeSteps < 6);
+                    return hasTokenInBase || hasTokenOnBoard;
+                }
+                // Need at least one token on the board to move
+                return player.tokens.some(t => !t.inBase && !t.isHome && t.homeSteps < 6);
+            }
+
+            function moveToken(player, tokenIndex, diceVal) {
+                const token = player.tokens[tokenIndex];
+
+                if (token.isHome) return false; // already finished
+                if (token.inBase && diceVal !== 6) return false; // need 6 to come out
+
+                if (token.inBase && diceVal === 6) {
+                    // Bring token out to entry point
+                    token.inBase = false;
+                    token.pathPosition = player.entryIndex;
+                    token.homeSteps = 0;
+                    return true;
+                }
+
+                if (token.homeSteps > 0) {
+                    // Moving in home column
+                    const newHomeSteps = token.homeSteps + diceVal;
+                    if (newHomeSteps === 6) {
+                        token.homeSteps = 6;
+                        token.isHome = true;
+                        token.pathPosition = -1;
+                        player.finishedTokens++;
+                        return true;
+                    } else if (newHomeSteps < 6) {
+                        token.homeSteps = newHomeSteps;
+                        return true;
+                    } else {
+                        // Overshoot - can't move
+                        return false;
+                    }
+                }
+
+                if (token.pathPosition >= 0) {
+                    // Moving on main track
+                    const stepsFromEntry = (token.pathPosition - player.entryIndex + 52) % 52;
+                    const newStepsFromEntry = stepsFromEntry + diceVal;
+
+                    if (newStepsFromEntry > 51) {
+                        // Enter home column
+                        const homeSteps = newStepsFromEntry - 51;
+                        if (homeSteps <= 6) {
+                            token.pathPosition = -1;
+                            token.homeSteps = homeSteps;
+                            if (homeSteps === 6) {
+                                token.isHome = true;
+                                player.finishedTokens++;
+                            }
+                            return true;
+                        } else {
+                            return false; // overshoot
+                        }
+                    } else if (newStepsFromEntry === 51) {
+                        // Exactly at home entry - needs to enter home column on next move
+                        token.pathPosition = getMainTrackPosition(player, 51);
+                        return true;
+                    } else {
+                        const newPathPos = getMainTrackPosition(player, newStepsFromEntry);
+                        // Check for capture
+                        checkCapture(token, newPathPos, player);
+                        token.pathPosition = newPathPos;
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            function checkCapture(movingToken, newPathPos, movingPlayer) {
+                // Check if any opponent token is at this position
+                for (const [color, player] of Object.entries(players)) {
+                    if (color === movingPlayer.color) continue;
+                    for (const token of player.tokens) {
+                        if (!token.inBase && !token.isHome && token.homeSteps === 0 &&
+                            token.pathPosition === newPathPos) {
+                            // Captured! Send opponent token back to base
+                            // But if this is the selected winner's token being captured, reduce chance
+                            if (color === selectedWinner && Math.random() < 0.7) {
+                                // 70% chance to avoid capture for the chosen winner
+                                continue;
+                            }
+                            token.inBase = true;
+                            token.pathPosition = -1;
+                            token.homeSteps = 0;
+                            logMessage(`${COLOR_NAMES[movingPlayer.color]} captured ${COLOR_NAMES[color]}'s token! 🔥`,
+                                true);
+                        }
+                    }
+                }
+            }
+
+            function findBestTokenToMove(player, diceVal) {
+                // Prioritize tokens strategically
+                const candidates = [];
+
+                player.tokens.forEach((token, idx) => {
+                    if (token.isHome) return;
+
+                    if (token.inBase && diceVal === 6) {
+                        candidates.push({ idx, priority: 10 }); // High priority to bring out
+                        return;
+                    }
+                    if (token.inBase) return;
+
+                    if (token.homeSteps > 0) {
+                        const newSteps = token.homeSteps + diceVal;
+                        if (newSteps <= 6) {
+                            candidates.push({ idx, priority: 8 + (newSteps === 6 ? 10 : 0) });
+                        }
+                        return;
+                    }
+
+                    if (token.pathPosition >= 0) {
+                        const stepsFromEntry = (token.pathPosition - player.entryIndex + 52) % 52;
+                        const newSteps = stepsFromEntry + diceVal;
+                        if (newSteps <= 57) { // 51 track + 6 home
+                            let priority = 5;
+                            if (newSteps > 51) priority = 7; // Entering home column
+                            if (newSteps === 57) priority = 15; // Reaching center
+                            candidates.push({ idx, priority });
+                        }
+                    }
+                });
+
+                if (candidates.length === 0) return -1;
+
+                // Sort by priority descending
+                candidates.sort((a, b) => b.priority - a.priority);
+
+                // For selected winner, always pick the best move
+                if (player.color === selectedWinner) {
+                    return candidates[0].idx;
+                }
+
+                // For others, sometimes pick suboptimal moves
+                if (Math.random() < 0.3 && candidates.length > 1) {
+                    return candidates[Math.floor(Math.random() * candidates.length)];
+                }
+                return candidates[0].idx;
+            }
+
+            function checkWinCondition(player) {
+                return player.finishedTokens >= 4;
+            }
+
+            function advanceTurn() {
+                consecutiveSixes = 0;
+                currentPlayerIndex = (currentPlayerIndex + 1) % 4;
+                updateCurrentPlayerBadge();
+            }
+
+            function updateCurrentPlayerBadge() {
+                const color = getCurrentPlayerColor();
+                currentPlayerBadge.textContent = COLOR_NAMES[color].toUpperCase();
+                currentPlayerBadge.style.background = COLOR_HEX[color];
+                currentPlayerBadge.style.color = color === 'yellow' ? '#333' : '#fff';
+            }
+
+            function logMessage(msg, highlight = false) {
+                messageLog.textContent = msg;
+                if (highlight) {
+                    messageLog.classList.add('highlight');
+                    setTimeout(() => messageLog.classList.remove('highlight'), 1500);
+                } else {
+                    messageLog.classList.remove('highlight');
+                }
+            }
+
+            function performDiceRoll() {
+                if (gameOver) return;
+                if (!gameRunning) return;
+
+                const player = getCurrentPlayer();
+                const playerColor = getCurrentPlayerColor();
+                const diceVal = getDiceValueForCurrentPlayer();
+
+                // Animate dice
+                diceDisplay.classList.add('rolling');
+                diceDisplay.textContent = '?';
+                let rollAnimCount = 0;
+                const maxAnimRolls = 8;
+                const animInterval = 60;
+
+                function animateRoll() {
+                    diceDisplay.textContent = Math.floor(Math.random() * 6) + 1;
+                    rollAnimCount++;
+                    if (rollAnimCount < maxAnimRolls) {
+                        setTimeout(animateRoll, animInterval + rollAnimCount * 10);
+                    } else {
+                        // Final value
+                        diceDisplay.classList.remove('rolling');
+                        diceDisplay.textContent = diceVal;
+                        if (diceVal === 6) {
+                            diceDisplay.classList.add('six');
+                            setTimeout(() => diceDisplay.classList.remove('six'), 800);
+                        }
+                        processRollResult(diceVal, player, playerColor);
+                    }
+                }
+
+                setTimeout(animateRoll, 50);
+            }
+
+            function processRollResult(diceVal, player, playerColor) {
+                rollCount++;
+                diceValue = diceVal;
+
+                if (diceVal === 6) {
+                    consecutiveSixes++;
+                    if (consecutiveSixes >= 3) {
+                        // Three consecutive sixes - lose turn
+                        logMessage(`${COLOR_NAMES[playerColor]} rolled 3 sixes! Turn forfeited. 😞`, true);
+                        consecutiveSixes = 0;
+                        advanceTurn();
+                        renderBoard();
+                        scheduleNextAutoPlay();
+                        return;
+                    }
+                }
+
+                const canMove = canMoveAnyToken(player, diceVal);
+
+                if (!canMove) {
+                    logMessage(`${COLOR_NAMES[playerColor]} rolled ${diceVal} - No moves possible.`, false);
+                    if (diceVal === 6) consecutiveSixes = 0;
+                    advanceTurn();
+                    renderBoard();
+                    scheduleNextAutoPlay();
+                    return;
+                }
+
+                const tokenIdx = findBestTokenToMove(player, diceVal);
+                if (tokenIdx < 0) {
+                    logMessage(`${COLOR_NAMES[playerColor]} rolled ${diceVal} - No valid moves.`, false);
+                    if (diceVal === 6) consecutiveSixes = 0;
+                    advanceTurn();
+                    renderBoard();
+                    scheduleNextAutoPlay();
+                    return;
+                }
+
+                const moved = moveToken(player, tokenIdx, diceVal);
+                if (moved) {
+                    const token = player.tokens[tokenIdx];
+                    let moveDesc = '';
+                    if (token.isHome) moveDesc = 'reached HOME! 🏠';
+                    else if (token.homeSteps > 0) moveDesc = `advanced to home step ${token.homeSteps}`;
+                    else if (!token.inBase && token.pathPosition >= 0) moveDesc = `moved to position ${token.pathPosition}`;
+                    else moveDesc = 'entered the board!';
+
+                    logMessage(`${COLOR_NAMES[playerColor]} rolled ${diceVal} - Token ${tokenIdx+1} ${moveDesc}`,
+                        token.isHome);
+
+                    // Check win
+                    if (checkWinCondition(player)) {
+                        handleWin(playerColor);
+                        renderBoard();
+                        return;
+                    }
+                }
+
+                renderBoard();
+
+                // If rolled 6, get another turn (unless game over)
+                if (diceVal === 6 && !gameOver) {
+                    logMessage(`${COLOR_NAMES[playerColor]} gets another turn! (rolled 6)`, true);
+                    scheduleNextAutoPlay(400);
+                    return;
+                }
+
+                if (diceVal === 6) consecutiveSixes = 0;
+                advanceTurn();
+                scheduleNextAutoPlay();
+            }
+
+            function handleWin(winnerColor) {
+                gameOver = true;
+                gameRunning = false;
+                autoPlayActive = false;
+                btnAuto.textContent = '▶ Auto Play';
+                btnAuto.classList.remove('active');
+                btnRoll.disabled = true;
+                if (autoPlayTimeout) clearTimeout(autoPlayTimeout);
+
+                const wonAsPredicted = winnerColor === selectedWinner;
+                winnerText.textContent = `${COLOR_NAMES[winnerColor]} Wins!`;
+                winnerText.style.color = COLOR_HEX[winnerColor];
+                if (wonAsPredicted) {
+                    winnerSubtext.textContent = '🎯 Exactly as predicted! Your chosen color triumphed!';
+                } else {
+                    winnerSubtext.textContent = '😮 Upset! The chosen color didn\'t win this time.';
+                }
+                overlay.classList.add('show');
+                winnerBanner.classList.add('show');
+                logMessage(`🏆 ${COLOR_NAMES[winnerColor]} WINS! ${wonAsPredicted ? 'As predicted!' : 'What an upset!'}`,
+                    true);
+                renderBoard();
+            }
+
+            function scheduleNextAutoPlay(delay = null) {
+                if (!autoPlayActive || gameOver) return;
+                if (delay === null) {
+                    const speed = parseInt(speedSlider.value);
+                    delay = 1100 - speed * 100; // 1000ms to 100ms
+                }
+                if (autoPlayTimeout) clearTimeout(autoPlayTimeout);
+                autoPlayTimeout = setTimeout(() => {
+                    if (autoPlayActive && !gameOver && gameRunning) {
+                        performDiceRoll();
+                    }
+                }, Math.max(150, delay));
+            }
+
+            function startGame() {
+                if (gameRunning) return;
+                initPlayers();
+                calculateBoardCoordinates();
+                gameRunning = true;
+                gameOver = false;
+                currentPlayerIndex = 0;
+                diceValue = null;
+                consecutiveSixes = 0;
+                rollCount = 0;
+                diceDisplay.textContent = '?';
+                diceDisplay.classList.remove('rolling', 'six');
+                updateCurrentPlayerBadge();
+                logMessage(`Game started! ${COLOR_NAMES[selectedWinner]} is favored to win. 👑`);
+                btnRoll.disabled = false;
+                renderBoard();
+            }
+
+            function resetGame() {
+                if (autoPlayTimeout) clearTimeout(autoPlayTimeout);
+                autoPlayActive = false;
+                btnAuto.textContent = '▶ Auto Play';
+                btnAuto.classList.remove('active');
+                gameRunning = false;
+                gameOver = false;
+                diceValue = null;
+                consecutiveSixes = 0;
+                rollCount = 0;
+                diceDisplay.textContent = '?';
+                diceDisplay.classList.remove('rolling', 'six');
+                btnRoll.disabled = true;
+                initPlayers();
+                calculateBoardCoordinates();
+                updateCurrentPlayerBadge();
+                logMessage('Select a color to begin!');
+                renderBoard();
+            }
+
+            function toggleAutoPlay() {
+                if (gameOver) return;
+                if (!gameRunning) {
+                    startGame();
+                }
+                autoPlayActive = !autoPlayActive;
+                if (autoPlayActive) {
+                    btnAuto.textContent = '⏸ Stop Auto';
+                    btnAuto.classList.add('active');
+                    btnRoll.disabled = true;
+                    logMessage('Auto-play started...', false);
+                    scheduleNextAutoPlay(500);
+                } else {
+                    btnAuto.textContent = '▶ Auto Play';
+                    btnAuto.classList.remove('active');
+                    btnRoll.disabled = false;
+                    if (autoPlayTimeout) clearTimeout(autoPlayTimeout);
+                    logMessage('Auto-play stopped. Roll manually!', false);
+                }
+            }
+
+            function manualRoll() {
+                if (!gameRunning || gameOver || autoPlayActive) return;
+                performDiceRoll();
+            }
+
+            function closeWinner() {
+                overlay.classList.remove('show');
+                winnerBanner.classList.remove('show');
+                resetGame();
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            btnRoll.addEventListener('click', manualRoll);
+            btnAuto.addEventListener('click', toggleAutoPlay);
+            btnReset.addEventListener('click', resetGame);
+
+            // Color selection buttons
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const color = this.dataset.color;
+                    if (gameRunning && !gameOver) {
+                        // Don't change during active game
+                        logMessage('Cannot change winner during an active game. Reset first!', true);
+                        return;
+                    }
+                    selectedWinner = color;
+                    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove(
+                        'selected'));
+                    this.classList.add('selected');
+                    logMessage(
+                        `👑 ${COLOR_NAMES[color]} selected as the predicted winner! They will have the advantage.`
+                        );
+                    btnRoll.disabled = false;
+                    if (!gameRunning) {
+                        initPlayers();
+                        calculateBoardCoordinates();
+                        updateCurrentPlayerBadge();
+                        renderBoard();
+                        logMessage(
+                            `Ready! ${COLOR_NAMES[color]} is favored. Press Roll or Auto Play to start.`
+                            );
+                    }
+                });
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'r' || e.key === 'R') manualRoll();
+                if (e.key === 'a' || e.key === 'A') toggleAutoPlay();
+                if (e.key === 'x' || e.key === 'X') resetGame();
+                if (e.key === 'Escape') closeWinner();
+            });
+
+            // ==================== INITIALIZATION ====================
+            function init() {
+                // Set default selected winner
+                selectedWinner = 'red';
+                const defaultBtn = document.querySelector('.color-btn.red');
+                if (defaultBtn) defaultBtn.classList.add('selected');
+
+                initPlayers();
+                calculateBoardCoordinates();
+                updateCurrentPlayerBadge();
+                diceDisplay.textContent = '?';
+                btnRoll.disabled = false;
+                logMessage('👑 Red is selected to win! Press Roll Dice or Auto Play to begin.');
+                renderBoard();
+            }
+
+            // Resize handling
+            function handleResize() {
+                const wrapper = document.querySelector('.canvas-wrapper');
+                const size = Math.min(wrapper.clientWidth, 580);
+                canvas.width = BOARD_SIZE;
+                canvas.height = BOARD_SIZE;
+                canvas.style.width = size + 'px';
+                canvas.style.height = size + 'px';
+                calculateBoardCoordinates();
+                renderBoard();
+            }
+
+            window.addEventListener('resize', handleResize);
+            canvas.width = BOARD_SIZE;
+            canvas.height = BOARD_SIZE;
+            handleResize();
+
+            init();
+
+            console.log('🎲 Ludo Master Ready!');
+            console.log('👑 Selected winner:', COLOR_NAMES[selectedWinner]);
+            console.log('💡 Controls: Roll Dice | Auto Play | Reset');
+            console.log('⌨️ Keyboard: R=Roll, A=Auto, X=Reset, Esc=Close');
+            console.log('📊 The selected color has enhanced dice odds!');
+        })();
+    </script>
+</body>
+</html>
