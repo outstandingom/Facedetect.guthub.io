@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jila Betul — Premium Editorial</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+
+<style>
+/* ============================================================
+   PREMIUM EDITORIAL TOKENS (No Gold, High Aesthetic)
+============================================================ */
+:root {
+  /* Backgrounds */
+  --bg-1: #F4F2EF;
+  --bg-2: #EBE7E2;
+  --surface: #FFFFFF;
+  --surface-2: #FAF9F8;
+  
+  /* Deep Sophisticated Tones */
+  --burgundy: #4A0E1F;
+  --burgundy-dark: #320813;
+  --burgundy-light: #5E1A2C;
+  --slate: #1C1B1A;
+  --slate-soft: #4A4744;
+  
+  /* Text Colors */
+  --ink: #1C1B1A;
+  --ink-soft: #5A5652;
+  --mute: #8E8A86;
+  
+  /* Structural */
+  --hairline: rgba(28, 27, 26, 0.12);
+  --accent: var(--burgundy);
+  --warning-bg: rgba(74, 14, 31, 0.06);
+  --warning: var(--burgundy);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: var(--bg-1);
+  color: var(--ink);
+  font-family: "Geist", system-ui, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  background: radial-gradient(120% 70% at 50% 0%,
+    #FFFFFF 0%, #F4F2EF 60%, #EBE7E2 100%);
+  min-height: 100vh;
+  padding-bottom: 100px;
+}
+
+/* ============================================================
+   TYPOGRAPHY (The Premium Factor)
+============================================================ */
+h1, h2, h3, .serif {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+/* ============================================================
+   GRAIN
+============================================================ */
+.grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.03;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* ============================================================
+   TOP NAVBAR
+============================================================ */
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--hairline);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 4px 20px -10px rgba(0,0,0,0.03);
+  opacity: 0;
+  transform: translateY(-20px);
+}
+.nav-brand { display: flex; align-items: center; gap: 12px; }
+.nav-logo {
+  width: 38px; height: 38px;
+  background: var(--burgundy);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-family: "Instrument Serif", serif;
+  font-weight: 400; font-size: 20px; font-style: italic;
+  box-shadow: 0 6px 14px -4px rgba(74, 14, 31, 0.3);
+}
+.nav-titles { display: flex; flex-direction: column; }
+.nav-titles .title {
+  font-family: "Instrument Serif", serif;
+  font-weight: 500; font-size: 16px;
+  letter-spacing: 0.01em; color: var(--ink);
+}
+.nav-titles .subtitle {
+  font-family: "Geist Mono", monospace; font-size: 9px;
+  letter-spacing: 0.1em; color: var(--mute); text-transform: uppercase;
+  margin-top: 1px;
+}
+.nav-actions { display: flex; align-items: center; gap: 8px; }
+.btn-outline {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 999px;
+  border: 1px solid var(--hairline);
+  background: transparent; font-family: "Geist Mono", monospace;
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--slate-soft); cursor: pointer; transition: all 0.3s ease;
+}
+.btn-outline:hover { background: #fff; border-color: var(--burgundy); color: var(--burgundy); }
+.btn-solid {
+  display: inline-flex; align-items: center;
+  padding: 8px 18px; border-radius: 999px;
+  background: var(--burgundy);
+  color: #fff; border: none;
+  font-family: "Geist Mono", monospace; font-size: 10px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.3s ease;
+  box-shadow: 0 4px 12px -4px rgba(74, 14, 31, 0.3);
+}
+.btn-solid:hover { background: var(--burgundy-light); transform: translateY(-1px); }
+
+/* ============================================================
+   HERO SECTION
+============================================================ */
+.hero-section {
+  position: relative;
+  margin: 16px 20px;
+  border-radius: 28px;
+  background: var(--burgundy);
+  padding: 44px 28px;
+  color: #fff;
+  overflow: hidden;
+  box-shadow: 0 24px 48px -18px rgba(74, 14, 31, 0.4);
+  opacity: 0; transform: scale(0.96);
+}
+.hero-section::before {
+  content: ""; position: absolute;
+  width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08), transparent 65%);
+  top: -100px; right: -80px; filter: blur(30px);
+}
+.hero-content { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 16px; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px; border-radius: 999px;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+  font-family: "Geist Mono", monospace; font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9); width: fit-content;
+}
+.hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; }
+.hero-title {
+  font-size: clamp(32px, 8vw, 48px);
+  line-height: 1.05; letter-spacing: -0.02em;
+  font-weight: 400; font-style: italic;
+  color: #fff;
+}
+.hero-desc {
+  font-size: 15px; line-height: 1.6;
+  color: rgba(255, 255, 255, 0.75); max-width: 90%;
+  position: relative; padding: 0 16px;
+}
+.hero-desc .arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.3s ease; color: #fff; font-size: 12px;
+}
+.hero-desc .arrow:hover { background: rgba(255,255,255,0.15); }
+.hero-desc .arrow.left { left: -8px; }
+.hero-desc .arrow.right { right: -8px; }
+.hero-cta {
+  margin-top: 12px; display: inline-flex; align-items: center; gap: 10px;
+  padding: 16px 32px; border-radius: 999px;
+  background: #FFFFFF; color: var(--burgundy);
+  font-weight: 600; font-size: 14px; letter-spacing: 0.02em;
+  border: none; cursor: pointer; width: fit-content;
+  transition: all 0.4s cubic-bezier(0.6, 0, 0.2, 1);
+  box-shadow: 0 8px 20px -8px rgba(0,0,0,0.15);
+}
+.hero-cta:hover {
+  background: var(--bg-1); color: var(--burgundy-dark);
+  transform: translateX(6px);
+  box-shadow: 0 8px 24px -6px rgba(0,0,0,0.25);
+}
+.hero-dots { display: flex; gap: 6px; margin-top: 24px; justify-content: center; }
+.hero-dots .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(255,255,255,0.2); transition: all 0.3s ease;
+}
+.hero-dots .dot.active { width: 20px; border-radius: 999px; background: #fff; }
+
+/* ============================================================
+   QUICK ACTIONS
+============================================================ */
+.quick-actions {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 0 20px; margin-top: 24px;
+  opacity: 0; transform: translateY(30px);
+}
+.action-card {
+  display: flex; align-items: center; gap: 16px;
+  padding: 20px; border-radius: 24px;
+  background: var(--surface);
+  box-shadow: 0 12px 28px -12px rgba(0, 0, 0, 0.06);
+  cursor: pointer; transition: all 0.4s cubic-bezier(0.6, 0, 0.2, 1);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+.action-card:hover { transform: translateY(-4px); box-shadow: 0 20px 36px -12px rgba(0, 0, 0, 0.1); }
+.action-icon {
+  width: 52px; height: 52px; border-radius: 16px;
+  background: var(--bg-1);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--burgundy); flex-shrink: 0;
+  border: 1px solid rgba(74, 14, 31, 0.08);
+}
+.action-text h4 { font-family: "Geist", sans-serif; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); }
+.action-text p { font-size: 12px; color: var(--mute); margin-top: 3px; font-family: "Geist Mono", monospace; letter-spacing: 0.02em; }
+
+/* ============================================================
+   SPECIAL SERVICE BANNER
+============================================================ */
+.special-service {
+  position: relative;
+  margin: 24px 20px;
+  border-radius: 28px;
+  background: var(--burgundy);
+  padding: 36px 24px;
+  color: #fff;
+  overflow: hidden;
+  box-shadow: 0 24px 48px -18px rgba(74, 14, 31, 0.4);
+  opacity: 0; transform: translateY(40px);
+}
+.special-service::before {
+  content: ""; position: absolute;
+  width: 280px; height: 280px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.06), transparent 65%);
+  bottom: -100px; right: -80px; filter: blur(30px); pointer-events: none;
+}
+.special-service .leaf-bg {
+  position: absolute;
+  right: -20px; bottom: -20px;
+  width: 160px; height: 160px;
+  opacity: 0.06;
+  color: #fff;
+  pointer-events: none;
+}
+.special-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px; border-radius: 999px;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+  font-family: "Geist Mono", monospace; font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9); width: fit-content; margin-bottom: 16px;
+}
+.special-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; }
+.special-title {
+  font-family: "Instrument Serif", serif;
+  font-size: clamp(28px, 6vw, 34px);
+  font-weight: 400; font-style: italic;
+  letter-spacing: -0.01em; line-height: 1.1;
+  margin-bottom: 12px; position: relative; z-index: 1;
+}
+.special-desc {
+  font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.7);
+  max-width: 85%; margin-bottom: 28px; position: relative; z-index: 1;
+}
+.special-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 28px; border-radius: 999px;
+  background: #fff; color: var(--burgundy);
+  font-weight: 600; font-size: 13px; letter-spacing: 0.02em;
+  border: none; cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.6, 0, 0.2, 1);
+  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.15);
+  position: relative; z-index: 1;
+}
+.special-cta:hover {
+  background: var(--bg-1); color: var(--burgundy-dark);
+  transform: translateX(6px);
+}
+
+/* ============================================================
+   SERVICES GRID
+============================================================ */
+.section-header {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  padding: 0 20px; margin-top: 32px; margin-bottom: 20px;
+  opacity: 0; transform: translateY(20px);
+}
+.section-header .left h3 { 
+  font-family: "Instrument Serif", serif;
+  font-size: 24px; font-weight: 400; letter-spacing: -0.01em; color: var(--ink); 
+}
+.section-header .left p { font-size: 11px; color: var(--mute); font-family: "Geist Mono", monospace; margin-top: 4px; letter-spacing: 0.04em; }
+.section-header .right {
+  font-family: "Geist Mono", monospace; font-size: 11px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--burgundy); cursor: pointer; display: flex; align-items: center; gap: 4px;
+  transition: gap 0.3s ease; font-weight: 600;
+}
+.section-header .right:hover { gap: 8px; }
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px 12px;
+  padding: 0 20px;
+  opacity: 0; transform: translateY(30px);
+}
+.service-item {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  text-align: center; cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.6, 0, 0.2, 1);
+}
+.service-item:hover { transform: translateY(-4px); }
+.service-icon {
+  width: 64px; height: 64px; border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.05), inset 0 1px 0 #FFFFFF;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  transition: all 0.4s ease;
+}
+.service-item:hover .service-icon {
+  box-shadow: 0 16px 32px -10px rgba(0, 0, 0, 0.1), inset 0 1px 0 #FFFFFF;
+  border-color: rgba(74, 14, 31, 0.2);
+}
+.service-icon svg { width: 28px; height: 28px; stroke: var(--burgundy); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.service-item span {
+  font-family: "Geist", sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.02em;
+  color: var(--slate-soft); line-height: 1.2;
+}
+
+/* ============================================================
+   RECENT COMPLAINTS
+============================================================ */
+.complaints-list {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 0 20px; margin-top: 16px;
+  opacity: 0; transform: translateY(30px);
+}
+.complaint-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px; border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.06), inset 0 1px 0 #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  cursor: pointer; transition: all 0.4s ease;
+}
+.complaint-card:hover {
+  transform: translateX(4px);
+  box-shadow: 0 14px 30px -12px rgba(0, 0, 0, 0.1), inset 0 1px 0 #FFFFFF;
+}
+.complaint-icon {
+  width: 44px; height: 44px; border-radius: 14px;
+  background: var(--bg-1);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--burgundy); flex-shrink: 0;
+  border: 1px solid rgba(74, 14, 31, 0.08);
+}
+.complaint-icon svg { width: 20px; height: 20px; stroke: var(--burgundy); fill: none; stroke-width: 1.8; }
+.complaint-body { flex: 1; min-width: 0; }
+.complaint-id {
+  font-family: "Geist Mono", monospace; font-size: 11px;
+  letter-spacing: 0.04em; color: var(--mute); margin-bottom: 4px;
+}
+.complaint-title {
+  font-family: "Geist", sans-serif; font-size: 14px; font-weight: 600; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.complaint-loc {
+  font-size: 11px; color: var(--mute); display: flex; align-items: center; gap: 4px; margin-top: 3px;
+}
+.complaint-loc svg { width: 12px; height: 12px; stroke: var(--mute); fill: none; stroke-width: 2; }
+.complaint-status {
+  padding: 6px 12px; border-radius: 999px;
+  font-family: "Geist Mono", monospace; font-size: 9px;
+  letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
+  flex-shrink: 0;
+}
+.complaint-status.pending { 
+  background: var(--warning-bg); 
+  color: var(--burgundy); 
+  border: 1px solid rgba(74, 14, 31, 0.1);
+}
+
+/* ============================================================
+   FLOATING FEEDBACK BUTTON
+============================================================ */
+.floating-feedback {
+  position: fixed;
+  bottom: 90px; right: 20px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px 12px 16px;
+  border-radius: 999px;
+  background: var(--burgundy);
+  color: #fff; border: none; cursor: pointer;
+  font-family: "Geist", sans-serif; font-weight: 600; font-size: 13px;
+  box-shadow: 0 12px 28px -8px rgba(74, 14, 31, 0.4);
+  z-index: 90;
+  transition: all 0.4s cubic-bezier(0.6, 0, 0.2, 1);
+  opacity: 0; transform: translateY(20px) scale(0.9);
+}
+.floating-feedback:hover {
+  transform: translateY(-4px) scale(1.02);
+  background: var(--burgundy-dark);
+  box-shadow: 0 16px 32px -8px rgba(74, 14, 31, 0.5);
+}
+.feedback-icon {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+}
+.feedback-icon svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+.feedback-badge {
+  background: #fff; color: var(--burgundy);
+  font-family: "Geist Mono", monospace; font-size: 10px;
+  font-weight: 700; width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ============================================================
+   BOTTOM NAVIGATION
+============================================================ */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--hairline);
+  display: flex; justify-content: space-around; align-items: center;
+  padding: 10px 16px 14px; z-index: 100;
+  box-shadow: 0 -10px 30px -10px rgba(0, 0, 0, 0.03);
+  opacity: 0; transform: translateY(30px);
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-family: "Geist Mono", monospace; font-size: 9px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--mute); cursor: pointer; transition: all 0.3s ease;
+  padding: 6px 12px; border-radius: 12px;
+}
+.nav-item:hover { color: var(--burgundy); background: rgba(74, 14, 31, 0.03); }
+.nav-item.active { color: var(--burgundy); font-weight: 700; }
+.nav-item svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nav-fab {
+  position: relative; top: -20px;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--burgundy);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 10px 24px -6px rgba(74, 14, 31, 0.4);
+  cursor: pointer; transition: all 0.4s cubic-bezier(0.6, 0, 0.2, 1);
+  border: 3px solid var(--bg-1);
+}
+.nav-fab:hover { transform: scale(1.1) translateY(-2px); background: var(--burgundy-light); box-shadow: 0 14px 28px -6px rgba(74, 14, 31, 0.5); border-color: #fff; }
+.nav-fab svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 2.5; }
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media (max-width: 400px) {
+  .hero-title { font-size: 30px; }
+  .nav-titles .subtitle { display: none; }
+  .btn-outline span { display: none; }
+  .btn-outline { padding: 8px 10px; }
+  .action-icon { width: 44px; height: 44px; }
+  .service-icon { width: 56px; height: 56px; }
+  .service-icon svg { width: 24px; height: 24px; }
+  .service-item span { font-size: 10px; }
+  .special-desc { max-width: 95%; }
+  .section-header .left h3 { font-size: 20px; }
+}
+</style>
+</head>
+
+<body>
+<div class="grain"></div>
+
+<!-- ============================================================
+     TOP NAVBAR
+============================================================ -->
+<header class="top-nav">
+  <div class="nav-brand">
+    <div class="nav-logo">B</div>
+    <div class="nav-titles">
+      <span class="title">Jila Betul</span>
+      <span class="subtitle">नागरिक समाधान साथी</span>
+    </div>
+  </div>
+  <div class="nav-actions">
+    <button class="btn-outline">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <span>English</span>
+    </button>
+    <button class="btn-solid">लॉगिन</button>
+  </div>
+</header>
+
+<!-- ============================================================
+     HERO SECTION
+============================================================ -->
+<section class="hero-section">
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      Monsoon Preparedness
+    </div>
+    <h1 class="hero-title">Rain Water &amp; Flood Drainage</h1>
+    <div class="hero-desc">
+      <span class="arrow left">‹</span>
+      Blocked storm drains or road waterlogging? Municipal teams ready for immediate dispatch.
+      <span class="arrow right">›</span>
+    </div>
+    <button class="hero-cta">
+      Report Drainage
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </button>
+    <div class="hero-dots">
+      <span class="dot"></span>
+      <span class="dot active"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     QUICK ACTIONS
+============================================================ -->
+<div class="quick-actions">
+  <div class="action-card">
+    <div class="action-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    </div>
+    <div class="action-text">
+      <h4>शिकायत दर्ज करें</h4>
+      <p>फोटो लें + GPS स्वतः जुड़ेगा</p>
+    </div>
+  </div>
+  <div class="action-card">
+    <div class="action-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </div>
+    <div class="action-text">
+      <h4>शिकायत ट्रैक करें</h4>
+      <p>टिकट नंबर से स्थिति देखें व सत्यापित करें</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SPECIAL SERVICE BANNER
+============================================================ -->
+<section class="special-service">
+  <svg class="leaf-bg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5">
+    <path d="M50 10 C 30 30, 20 60, 50 90 C 80 60, 70 30, 50 10 Z" />
+    <path d="M50 10 L 50 90" />
+    <path d="M50 30 L 35 45" />
+    <path d="M50 50 L 65 65" />
+  </svg>
+  <div class="special-badge">
+    <span class="dot"></span>
+    विशिष्ट सेवा
+  </div>
+  <h2 class="special-title">हरित कचरा उठान</h2>
+  <p class="special-desc">जैविक और बगीचे का कचरा उठाने हेतु शिकायत दर्ज करें (Fallen leaves, tree pruning, garden waste &amp; fallen trees)</p>
+  <button class="special-cta">
+    हरित कचरा रिपोर्ट करें
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+  </button>
+</section>
+
+<!-- ============================================================
+     SERVICES GRID
+============================================================ -->
+<div class="section-header">
+  <div class="left">
+    <h3>हमारी सेवाएं</h3>
+    <p>सभी नगर निगम विभाग</p>
+  </div>
+  <div class="right">सभी देखें →</div>
+</div>
+
+<div class="services-grid">
+  <!-- Green City -->
+  <div class="service-item">
+    <div class="service-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 22c4.97 0 9-4.03 9-9-4.97 0-9 4.03-9 9z"/><path d="M5.5 12.5C8 15 10 18 12 22c2-4 4-7 6.5-9.5"/><path d="M12 2v10"/><path d="M12 2c-3 0-6 2-6 5s3 5 6 5 6-2 6-5-3-5-6-5z"/></svg>
+    </div>
+    <span>Green City</span>
+  </div>
+  <!-- Jal -->
+  <div class="service-item">
+    <div class="service-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+    </div>
+    <span>जल</span>
+  </div>
+  <!-- Varsha Jal -->
+  <div class="service-item">
+    <div class="service-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/><path d="M8 14a4 4 0 0 0 8 0"/></svg>
+    </div>
+    <span>वर्षा जल</span>
+  </div>
+  <!-- Nirman Kachra -->
+  <div class="service-item">
+    <div class="service-icon">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    </div>
+    <span>निर्माण कचरा</span>
+  </div>
+  <!-- Swachhta -->
+  <div class="service-item">
+    <div class="service-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+    </div>
+    <span>स्वच्छता</span>
+  </div>
+  <!-- Sadak -->
+  <div class="service-item">
+    <div class="service-icon">
+      <svg viewBox="0 0 24 24"><path d="M4 19l4-14h8l4 14"/><path d="M2 19h20"/><path d="M12 5v14"/></svg>
+    </div>
+    <span>सड़क</span>
+  </div>
+  <!-- Street Light -->
+  <div class="service-item">
+    <div class="service-icon">
+      <svg viewBox="0 0 24 24"><path d="M9 21h6"/><path d="M12 17v4"/><path d="M12 3a6 6 0 0 0-6 6c0 2 1 3.5 2 4.5h8c1-1 2-2.5 2-4.5a6 6 0 0 0-6-6z"/></svg>
+    </div>
+    <span>स्ट्रीट लाइट</span>
+  </div>
+  <!-- Sewage -->
+  <div class="service-item">
+    <div class="service-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 12h18"/><path d="M5 12V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6"/><path d="M7 12v6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-6"/></svg>
+    </div>
+    <span>सीवेज</span>
+  </div>
+</div>
+
+<!-- ============================================================
+     RECENT COMPLAINTS
+============================================================ -->
+<div class="section-header">
+  <div class="left">
+    <h3>हाल की शिकायतें</h3>
+  </div>
+  <div class="right">सभी देखें →</div>
+</div>
+
+<div class="complaints-list">
+  <!-- Complaint 1 -->
+  <div class="complaint-card">
+    <div class="complaint-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 22c4.97 0 9-4.03 9-9-4.97 0-9 4.03-9 9z"/><path d="M5.5 12.5C8 15 10 18 12 22c2-4 4-7 6.5-9.5"/><path d="M12 2v10"/><path d="M12 2c-3 0-6 2-6 5s3 5 6 5 6-2 6-5-3-5-6-5z"/></svg>
+    </div>
+    <div class="complaint-body">
+      <div class="complaint-id">#IMC-2026-00007</div>
+      <div class="complaint-title">Kharacha saf lare</div>
+      <div class="complaint-loc">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Betul, बैतूल
+      </div>
+    </div>
+    <div class="complaint-status pending">Pending</div>
+  </div>
+
+  <!-- Complaint 2 -->
+  <div class="complaint-card">
+    <div class="complaint-icon">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    </div>
+    <div class="complaint-body">
+      <div class="complaint-id">#IMC-2026-00006</div>
+      <div class="complaint-title">737548</div>
+      <div class="complaint-loc">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Betul, बैतूल
+      </div>
+    </div>
+    <div class="complaint-status pending">Pending</div>
+  </div>
+</div>
+
+<!-- ============================================================
+     FLOATING FEEDBACK BUTTON
+============================================================ -->
+<button class="floating-feedback">
+  <div class="feedback-icon">
+    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  </div>
+  स्थानीय विचार
+  <span class="feedback-badge">2</span>
+</button>
+
+<!-- ============================================================
+     BOTTOM NAVIGATION
+============================================================ -->
+<nav class="bottom-nav">
+  <div class="nav-item active">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    होम
+  </div>
+  <div class="nav-item">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    ट्रैक
+  </div>
+  <div class="nav-fab">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </div>
+  <div class="nav-item">
+    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    लॉगिन
+  </div>
+  <div class="nav-item">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    सेटिंग
+  </div>
+</nav>
+
+<!-- ============================================================
+     GSAP ANIMATIONS
+============================================================ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+/* ============================================================
+   INTRO TIMELINE
+============================================================ */
+const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+tl.to(".top-nav", { opacity: 1, y: 0, duration: 0.8 }, 0.2)
+  .to(".hero-section", { opacity: 1, scale: 1, duration: 1.1, ease: "back.out(1.2)" }, 0.4)
+  .from(".hero-badge", { y: 20, opacity: 0, duration: 0.6 }, 0.8)
+  .from(".hero-title", { y: 30, opacity: 0, duration: 0.8 }, 0.9)
+  .from(".hero-desc", { y: 20, opacity: 0, duration: 0.7 }, 1.0)
+  .from(".hero-cta", { y: 20, opacity: 0, duration: 0.7, ease: "back.out(1.5)" }, 1.1)
+  .from(".hero-dots .dot", { scale: 0, opacity: 0, duration: 0.5, stagger: 0.08 }, 1.2)
+  .to(".quick-actions", { opacity: 1, y: 0, duration: 0.9 }, 1.3)
+  .to(".bottom-nav", { opacity: 1, y: 0, duration: 0.8 }, 1.6);
+
+/* ============================================================
+   SCROLL REVEALS
+============================================================ */
+gsap.to(".special-service", {
+  opacity: 1, y: 0, duration: 1.0, ease: "power3.out",
+  scrollTrigger: { trigger: ".special-service", start: "top 85%" }
+});
+
+gsap.to(".section-header", {
+  opacity: 1, y: 0, duration: 0.8, stagger: 0.15, ease: "power3.out",
+  scrollTrigger: { trigger: ".services-grid", start: "top 85%" }
+});
+
+gsap.to(".services-grid", {
+  opacity: 1, y: 0, duration: 0.9, ease: "power3.out",
+  scrollTrigger: { trigger: ".services-grid", start: "top 85%" }
+});
+
+gsap.to(".complaints-list", {
+  opacity: 1, y: 0, duration: 0.9, ease: "power3.out",
+  scrollTrigger: { trigger: ".complaints-list", start: "top 85%" }
+});
+
+gsap.to(".floating-feedback", {
+  opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "back.out(1.5)",
+  scrollTrigger: { trigger: ".complaints-list", start: "top 90%" }
+});
+
+/* ============================================================
+   HOVER EFFECTS
+============================================================ */
+document.querySelectorAll(".action-card, .complaint-card").forEach((card) => {
+  card.addEventListener("mousemove", (e) => {
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    gsap.to(card, {
+      rotateX: -py * 4, rotateY: px * 4, y: -4,
+      duration: 0.4, ease: "power2.out",
+      transformPerspective: 1000, overwrite: "auto"
+    });
+  });
+  card.addEventListener("mouseleave", () => {
+    gsap.to(card, {
+      rotateX: 0, rotateY: 0, y: 0,
+      duration: 0.6, ease: "elastic.out(1, 0.5)", overwrite: "auto"
+    });
+  });
+});
+
+document.querySelectorAll(".service-item").forEach((item) => {
+  item.addEventListener("mouseenter", () => {
+    gsap.to(item.querySelector(".service-icon"), {
+      rotate: -8, scale: 1.08,
+      duration: 0.4, ease: "back.out(2)"
+    });
+  });
+  item.addEventListener("mouseleave", () => {
+    gsap.to(item.querySelector(".service-icon"), {
+      rotate: 0, scale: 1,
+      duration: 0.5, ease: "elastic.out(1, 0.5)"
+    });
+  });
+});
+
+/* ============================================================
+   CONTINUOUS SUBTLE FLOAT
+============================================================ */
+gsap.to(".nav-fab", {
+  y: -4, duration: 2.5, ease: "sine.inOut", yoyo: true, repeat: -1, delay: 2.5
+});
+
+gsap.to(".floating-feedback", {
+  y: -4, duration: 2.8, ease: "sine.inOut", yoyo: true, repeat: -1, delay: 3.5
+});
+</script>
+</body>
+</html>
